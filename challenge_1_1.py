@@ -6,7 +6,7 @@ Set 1, Challenge 1
 import base64
 
 
-def hex_to_b64(h: str):
+def hex_to_b64(h: str) -> bytes:
     return base64.b64encode(bytes.fromhex(h))
 
 

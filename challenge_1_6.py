@@ -3,11 +3,11 @@ Set 1, Challenge 6
 """
 
 
-import itertools
+from itertools import combinations
 from pprint import pprint
 from typing import List, Tuple
 
-import challenge_1_3
+from challenge_1_3 import crack_xor_cipher
 from challenge_1_5 import repeating_key_xor
 from challenge_1_6_util import hamming_distance
 
@@ -19,7 +19,7 @@ def guess_keysize(ct: bytes, guesses: int = 1) -> List[Tuple[float, int]]:
                   ct[size:2*size],
                   ct[2*size:3*size],
                   ct[3*size:4*size])
-        avg = sum(hamming_distance(a,b) for a,b in itertools.combinations(chunks, 2)) / 12
+        avg = sum(hamming_distance(a,b) for a,b in combinations(chunks, 2)) / 12
         return avg / size
 
     scores = [(get_score(size), size) for size in range(1, MAX_KEYSIZE+1)]
@@ -27,16 +27,16 @@ def guess_keysize(ct: bytes, guesses: int = 1) -> List[Tuple[float, int]]:
     return scores[:guesses]
 
 
-def crack_repeating_key_xor(ciphertext: bytes, keysize: int):
+def crack_repeating_key_xor(ciphertext: bytes, keysize: int) -> Tuple[float, bytes]:
     """
     Requires key size. Returns confidence score and key (not plaintext).
     """
 
     chunks = [ciphertext[i::keysize] for i in range(keysize)]
-    cracks = [challenge_1_3.crack_xor_cipher(chunk) for chunk in chunks]
+    cracks = [crack_xor_cipher(chunk) for chunk in chunks]
 
-    combined_score = sum(score for score, _, __ in cracks) / keysize
-    key = bytes(key_byte for _, key_byte, __ in cracks)
+    combined_score = sum(t[0] for t in cracks) / keysize
+    key = bytes(t[1] for t in cracks)
     return combined_score, key
 
 

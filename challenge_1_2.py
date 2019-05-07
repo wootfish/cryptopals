@@ -3,7 +3,7 @@ Set 1, Challenge 2
 """
 
 
-def bytes_xor(a: bytes, b: bytes):
+def bytes_xor(a: bytes, b: bytes) -> bytes:
     return b''.join(
         bytes([byte_1 ^ byte_2])
         for byte_1, byte_2 in zip(a, b)
