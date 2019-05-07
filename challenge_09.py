@@ -1,4 +1,4 @@
-def pkcs7(b: bytes, block_size: int) -> bytes:
+def pkcs7(b: bytes, block_size: int = 16) -> bytes:
     gap_size = block_size - (len(b) % block_size)
     return b + bytes([gap_size] * gap_size)
 
