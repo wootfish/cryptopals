@@ -1,11 +1,15 @@
 from itertools import count
 
 
+def bytes_to_chunks(b: bytes, chunk_size: int):
+    return [b[ind:ind+chunk_size] for ind in range(0, len(b), chunk_size)]
+
+
 def score_for_ecb(ciphertext: bytes):
     # tries to score the likelihood of the ciphertext using ECB mode by
     # counting how many repeated blocks there are in the ciphertext
     # (lower score = more likely to be ECB)
-    chunks = [ciphertext[ind:ind+16] for ind in range(0, len(ciphertext), 16)]
+    chunks = bytes_to_chunks(ciphertext, 16)
     return len(set(chunks)) / len(chunks)
 
 
