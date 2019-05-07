@@ -16,7 +16,7 @@ def score_for_ecb(ciphertext: bytes):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        sys.exit("Usage: python3 1_8.py filename")
+        sys.exit("Usage: python3 challenge_08.py filename")
 
     with open(sys.argv[1]) as f:
         ciphertexts = [bytes.fromhex(line.strip()) for line in f]

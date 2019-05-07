@@ -13,7 +13,7 @@ def hex_to_b64(h: str) -> bytes:
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        sys.exit("Usage: python3 1_1.py hex")
+        sys.exit("Usage: python3 challenge_01.py hex")
 
     hex_bytes = sys.argv[1]
 

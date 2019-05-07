@@ -5,11 +5,11 @@ Scores
 """
 
 
-from challenge_3 import crack_xor_cipher
+from challenge_03 import crack_xor_cipher
 
 
 if __name__ == "__main__":
-    with open("data/1_4.txt") as f:
+    with open("data/challenge_04.txt") as f:
         lines = [bytes.fromhex(line.strip()) for line in f]
 
     overall_best = (-1, None, None, None)

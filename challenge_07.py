@@ -13,7 +13,7 @@ if __name__ == "__main__":
     import sys
     import base64
     if len(sys.argv) != 2:
-        sys.exit("Usage: python3 1_7.py filename")
+        sys.exit("Usage: python3 challenge_07.py filename")
 
     with open(sys.argv[1]) as f:
         b64 = f.read()

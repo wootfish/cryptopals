@@ -1,4 +1,4 @@
-from challenge_2 import bytes_xor
+from challenge_02 import bytes_xor
 
 
 def repeating_key_xor(key: bytes, plaintext: bytes) -> bytes:
@@ -14,7 +14,7 @@ def repeating_key_xor(key: bytes, plaintext: bytes) -> bytes:
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        sys.exit("Usage: python3 1_5.py plaintext")
+        sys.exit("Usage: python3 challenge_05.py plaintext")
 
     plaintext = sys.argv[1].encode("UTF-8")  # ascii would probably be fine too, but... u never kno
     ciphertext = repeating_key_xor(b'ICE', plaintext)

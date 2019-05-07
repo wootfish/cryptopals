@@ -1,4 +1,4 @@
-from challenge_2 import bytes_xor
+from challenge_02 import bytes_xor
 from typing import Dict
 
 

@@ -13,7 +13,7 @@ def bytes_xor(a: bytes, b: bytes) -> bytes:
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 3:
-        sys.exit("Usage: python3 1_2.py hex morehex")
+        sys.exit("Usage: python3 challenge_02.py hex morehex")
 
     try:
         a = bytes.fromhex(sys.argv[1])

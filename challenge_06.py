@@ -7,9 +7,9 @@ from itertools import combinations
 from pprint import pprint
 from typing import List, Tuple
 
-from challenge_3 import crack_xor_cipher
-from challenge_5 import repeating_key_xor
-from challenge_6_util import hamming_distance
+from challenge_03 import crack_xor_cipher
+from challenge_05 import repeating_key_xor
+from challenge_06_util import hamming_distance
 
 
 MAX_KEYSIZE = 40
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     import base64
 
     if len(sys.argv) != 2:
-        sys.exit("Usage: python3 challenge_1_6.py filename")
+        sys.exit("Usage: python3 challenge_06.py filename")
 
     with open(sys.argv[1]) as f:
         b64 = f.read()

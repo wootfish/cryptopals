@@ -33,7 +33,7 @@ chose the one that seemed simplest: ignoring uppercase completely.
 """
 
 
-from challenge_2 import bytes_xor
+from challenge_02 import bytes_xor
 from typing import Tuple
 
 
@@ -80,7 +80,7 @@ def crack_xor_cipher(ciphertext: bytes) -> Tuple[float, bytes, bytes]:
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        sys.exit("Usage: python3 1_3.py hex")
+        sys.exit("Usage: python3 challenge_03.py hex")
 
     try:
         ciphertext = bytes.fromhex(sys.argv[1])
