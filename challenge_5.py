@@ -1,4 +1,4 @@
-from challenge_1_2 import bytes_xor
+from challenge_2 import bytes_xor
 
 
 def repeating_key_xor(key: bytes, plaintext: bytes) -> bytes:

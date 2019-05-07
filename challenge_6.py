@@ -7,9 +7,9 @@ from itertools import combinations
 from pprint import pprint
 from typing import List, Tuple
 
-from challenge_1_3 import crack_xor_cipher
-from challenge_1_5 import repeating_key_xor
-from challenge_1_6_util import hamming_distance
+from challenge_3 import crack_xor_cipher
+from challenge_5 import repeating_key_xor
+from challenge_6_util import hamming_distance
 
 
 MAX_KEYSIZE = 40

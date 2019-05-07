@@ -33,7 +33,7 @@ chose the one that seemed simplest: ignoring uppercase completely.
 """
 
 
-from challenge_1_2 import bytes_xor
+from challenge_2 import bytes_xor
 from typing import Tuple
 
 

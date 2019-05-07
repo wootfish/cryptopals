@@ -5,7 +5,7 @@ Scores
 """
 
 
-from challenge_1_3 import crack_xor_cipher
+from challenge_3 import crack_xor_cipher
 
 
 if __name__ == "__main__":
