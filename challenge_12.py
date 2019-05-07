@@ -9,7 +9,7 @@ from challenge_09 import pkcs7
 from challenge_11 import detector
 
 
-postfix = b64decode("""
+secret_postfix = b64decode("""
 Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
 aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
 dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
@@ -20,7 +20,7 @@ key = urandom(16)
 
 
 def enc(plaintext: bytes) -> bytes:
-    plaintext = pkcs7(plaintext + postfix)
+    plaintext = pkcs7(plaintext + secret_postfix)
     cipher = AES.new(key, AES.MODE_ECB)
     return cipher.encrypt(plaintext)
 
@@ -68,4 +68,4 @@ if __name__ == "__main__":
 
 
     print("Plaintext:\n")
-    print(postfix.decode("ascii"))
+    print(plaintext.decode("ascii"))
