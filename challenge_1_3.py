@@ -34,7 +34,7 @@ def crack_xor_cipher(ciphertext: bytes):
             best_key = candidate_key
             best_plaintext = candidate_plaintext
 
-    return (best_key, best_plaintext)
+    return (best_score, best_key, best_plaintext)
 
 
 if __name__ == "__main__":
@@ -47,6 +47,6 @@ if __name__ == "__main__":
     except ValueError:
         sys.exit("Error. Hex input may be malformed. Please try again.")
 
-    key, text = crack_xor_cipher(ciphertext)
+    score, key, text = crack_xor_cipher(ciphertext)
     print("Key:", key)
     print("Plaintext:", text)
