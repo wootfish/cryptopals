@@ -8,7 +8,7 @@ def pkcs7(b: bytes, block_size: int = 16) -> bytes:
 
 def strip_pkcs7(b: bytes) -> bytes:
     n = b[-1]
-    if len(b) < n or not b.endswith(bytes([n]*n)):
+    if n == 0 or len(b) < n or not b.endswith(bytes([n]*n)):
         raise PaddingError
     return b[:-n]
 
