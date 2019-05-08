@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     print("Postfix length determined to be", postfix_len)
     blocks_needed = (postfix_len // block_size) + 1
-    bytes_needed = 16 * blocks_needed
+    bytes_needed = block_size * blocks_needed
     slop = block_size - (postfix_len % block_size)
     plaintext = b''
 
