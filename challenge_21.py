@@ -9,7 +9,7 @@ import random
 class MersenneError(Exception): pass
 
 
-class MT:
+class MT19937:
     w, n, m, r = 32, 625, 397, 31
     a = 0x9908B0DF
 
@@ -65,7 +65,7 @@ class MT:
 
 
 if __name__ == "__main__":
-    r = MT()
+    r = MT19937()
     r.seed(0)  # or whatever
     print("Sample values (0 seed):")
     print(r.extract_number())
