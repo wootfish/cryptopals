@@ -4,16 +4,6 @@ from os import urandom
 from typing import Generator
 
 
-secret_seed = int.from_bytes(urandom(8), 'big')
-
-
-def get_random_values() -> Generator[int, None, None]:
-    r = MT19937()
-    r.seed(secret_seed)
-    while True:
-        yield r.extract_number()
-
-
 def untemper(y: int) -> int:
     # undo xors number 3 & 4 (easy)
     y ^= y >> 18
@@ -51,7 +41,7 @@ def clone(rng: MT19937) -> MT19937:
 
 if __name__ == "__main__":
     r1 = MT19937()
-    r1.seed(17**17)
+    r1.seed(int.from_bytes(urandom(8), 'big'))
     r2 = clone(r1)
 
     assert r2 is not r1
