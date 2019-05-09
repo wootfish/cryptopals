@@ -10,7 +10,7 @@ class MersenneError(Exception): pass
 
 
 class MT19937:
-    w, n, m, r = 32, 625, 397, 31
+    w, n, m, r = 32, 624, 397, 31
     a = 0x9908B0DF
 
     u, d = 11, 0xFFFFFFFF
