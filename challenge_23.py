@@ -40,14 +40,16 @@ def clone(rng: MT19937) -> MT19937:
 
 
 if __name__ == "__main__":
-    r1 = MT19937()
-    r1.seed(int.from_bytes(urandom(8), 'big'))
-    r2 = clone(r1)
+    for _ in range(10):
+        r1 = MT19937()
+        r1.seed(int.from_bytes(urandom(8), 'big'))
+        r2 = clone(r1)
 
-    assert r2 is not r1
-    assert r2.state is not r1.state
-    assert r2.state == r1.state
-    for _ in range(10**5):
-        assert r1.extract_number() == r2.extract_number()
+        assert r2 is not r1
+        assert r2.state is not r1.state
+        assert r2.state == r1.state
+        for _ in range(10**5):
+            assert r1.extract_number() == r2.extract_number()
+        print(".", end="", flush=True)
 
     print("Tests passed.")
