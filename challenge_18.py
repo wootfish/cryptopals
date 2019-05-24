@@ -25,7 +25,7 @@ def keystream(key: bytes, nonce: int = 0, quiet: bool = False) -> Generator[byte
 
 
 def aes_ctr_enc(key: bytes, plaintext: bytes, nonce: int = 0) -> bytes:
-    return bytes([pt ^ ks for pt, ks in zip(plaintext, keystream(key))])
+    return bytes([pt ^ ks for pt, ks in zip(plaintext, keystream(key, nonce))])
 
 
 aes_ctr_dec = aes_ctr_enc  # lol
