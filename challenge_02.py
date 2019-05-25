@@ -3,11 +3,20 @@ Set 1, Challenge 2
 """
 
 
-def bytes_xor(a: bytes, b: bytes) -> bytes:
+def _bytes_xor(a: bytes, b: bytes) -> bytes:
     return b''.join(
         bytes([byte_1 ^ byte_2])
         for byte_1, byte_2 in zip(a, b)
     )
+
+
+def bytes_xor(*args: bytes) -> bytes:
+    assert len(args) > 0
+    result = args[0]
+    for arg in args[1:]:
+        print(result, arg)
+        result = _bytes_xor(result, arg)
+    return result
 
 
 if __name__ == "__main__":
