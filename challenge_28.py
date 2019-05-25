@@ -9,13 +9,9 @@ def leftrotate(word: int, steps: int = 1, length: int = 32):
     return ((word << steps) | (word >> (length - steps))) & (2**length - 1)
 
 
-def sha1(message: bytes) -> bytes:
+def sha1(message: bytes, state=None) -> bytes:
     # initialize algorithm state
-    h0 = 0x67452301
-    h1 = 0xEFCDAB89
-    h2 = 0x98BADCFE
-    h3 = 0x10325476
-    h4 = 0xC3D2E1F0
+    h0, h1, h2, h3, h4 = state or (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
 
     ml = 8*len(message)  # message length, in bits
     pl = 511 - ((ml - 448) % 512)  # number of zero bits to pad with
