@@ -11,12 +11,12 @@ def leftrotate(word: int, steps: int = 1, length: int = 32) -> int:
 
 
 def sha1(message: bytes, state: Optional[Tuple[int]] = None,
-        padding: Optional[bytes] = None) -> bytes:
+        padding: Optional[bytes] = None, padding_offset: int = 0) -> bytes:
 
     # initialize algorithm state
     h0, h1, h2, h3, h4 = state or (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
 
-    ml = 8*len(message)  # message length, in bits
+    ml = padding_offset + 8*len(message)  # message length, in bits
     pl = 511 - ((ml - 448) % 512)  # number of zero bits to pad with
 
     #print(ml)
