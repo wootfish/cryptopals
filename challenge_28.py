@@ -1,25 +1,31 @@
 # text vectors from wikipedia; implementation adapted from pseudocode from same
 
 import struct
+from typing import Optional, Tuple
 
 from challenge_08 import bytes_to_chunks
 
 
-def leftrotate(word: int, steps: int = 1, length: int = 32):
+def leftrotate(word: int, steps: int = 1, length: int = 32) -> int:
     return ((word << steps) | (word >> (length - steps))) & (2**length - 1)
 
 
-def sha1(message: bytes, state=None) -> bytes:
+def sha1(message: bytes, state: Optional[Tuple[int]] = None,
+        padding: Optional[bytes] = None) -> bytes:
+
     # initialize algorithm state
     h0, h1, h2, h3, h4 = state or (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
 
     ml = 8*len(message)  # message length, in bits
     pl = 511 - ((ml - 448) % 512)  # number of zero bits to pad with
 
+    #print(ml)
+
     message += b'\x80'
     message += b'\x00' * (pl//8)
     message += struct.pack(">Q", ml)
     assert len(message) % 64 == 0
+    assert padding is None or message.endswith(padding)
 
     ###
     #h = message.hex()
@@ -74,6 +80,26 @@ def sha1(message: bytes, state=None) -> bytes:
 
 
 if __name__ == "__main__":
-    vec1 = sha1(b'')
-    print(vec1.hex())
-    print('da39a3ee5e6b4b0d3255bfef95601890afd80709')
+    print()
+
+    vec1 = sha1(b'').hex()
+    img1 = 'da39a3ee5e6b4b0d3255bfef95601890afd80709'
+    print(vec1)
+    print(img1)
+    assert vec1 == img1
+    print()
+
+    vec2 = sha1(b'The quick brown fox jumps over the lazy dog').hex()
+    img2 = '2fd4e1c67a2d28fced849ee1bb76e7391b93eb12'
+    print(vec2)
+    print(img2)
+    assert vec2 == img2
+    print()
+
+
+    vec3 = sha1(b'Deltron'*3030).hex()
+    img3 = 'a91ca9b66f121630b20e13f44236e5cdc0abe138'
+    print(vec3)
+    print(img3)
+    assert vec3 == img3
+    print()
