@@ -1,13 +1,6 @@
 from random import randrange
 
 
-def expmod(base, power, modulus):
-    result = 1
-    for _ in range(power):
-        result = (result * base) % modulus
-    return result
-
-
 if __name__ == "__main__":
     print("\n\nRunning through toy example.")
     p = 37
@@ -16,15 +9,15 @@ if __name__ == "__main__":
     print("p, g = {}, {}".format(p, g))
 
     a = randrange(0, 37)
-    A = expmod(g, a, p)
+    A = pow(g, a, p)
     print("a, A = {}, {}".format(a, A))
 
     b = randrange(0, 37)
-    B = expmod(g, b, p)
+    B = pow(g, b, p)
     print("b, B = {}, {}".format(b, B))
 
-    s1 = expmod(A, b, p)
-    s2 = expmod(B, a, p)
+    s1 = pow(A, b, p)
+    s2 = pow(B, a, p)
     print("Secrets:", s1, s2)
     assert s1 == s2
     print("Equality assertion passed.")
@@ -37,16 +30,16 @@ if __name__ == "__main__":
 
     print("p, g = {}, {}".format(p, g))
 
-    a = randrange(0, 37)
-    A = expmod(g, a, p)
+    a = randrange(0, p)
+    A = pow(g, a, p)
     print("a, A = {}, {}".format(a, A))
 
-    b = randrange(0, 37)
-    B = expmod(g, b, p)
+    b = randrange(0, p)
+    B = pow(g, b, p)
     print("b, B = {}, {}".format(b, B))
 
-    s1 = expmod(A, b, p)
-    s2 = expmod(B, a, p)
+    s1 = pow(A, b, p)
+    s2 = pow(B, a, p)
     print("Secrets:", s1, s2)
     assert s1 == s2
     print("Equality assertion passed.")
