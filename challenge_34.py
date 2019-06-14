@@ -58,7 +58,7 @@ class A:
 
     def send(self, plaintext):
         assert self.state == READY
-        print("[A] Encrypting", plaintext)
+        print("[A] Encrypting ", plaintext)
         iv = urandom(16)
         ct = _enc(self.key, iv, plaintext)
         return (iv, ct)
@@ -67,7 +67,7 @@ class A:
         assert self.state == READY
         iv, ct = message
         pt = _dec(self.key, iv, ct)
-        print("[A] Decrypted", pt)
+        print("[A] Decrypted  ", pt)
         return pt
 
 
@@ -95,13 +95,13 @@ class B:
 
         print("[B] Shared secret =", trunc(hex(self.s)))
         print("    Key =", self.key.hex())
-        print("[B] Sending B =", trunc(hex(self.B)))
+        print("    Sending B =", trunc(hex(self.B)))
 
         return (self.B,)
 
     def send(self, plaintext):
         assert self.state == READY
-        print("[B] Encrypting", plaintext)
+        print("[B] Encrypting ", plaintext)
         iv = urandom(16)
         ct = _enc(self.key, iv, plaintext)
         return (iv, ct)
@@ -110,8 +110,8 @@ class B:
         assert self.state == READY
         iv, ct = message
         pt = _dec(self.key, iv, ct)
-        print("[B] Decrypted", pt)
-        return pt
+        print("[B] Decrypted  ", pt)
+        return self.send(pt)
 
 
 class M:
@@ -122,27 +122,21 @@ class M:
 
     def tamper_init_A(self, message):
         self.p, self.g, _ = message
-        print()
         print("[M] Tampering with A's init message")
-        print()
         return (self.p, self.g, self.p)
 
     def tamper_init_B(self, message):
-        print()
         print("[M] Tampering with B's init message")
-        print()
         return (self.p,)
 
     def spy_on_message(self, message):
         iv, ct = message
         pt = _dec(self.key, iv, ct)
-        print()
-        print("[M] Intercepted message:", pt)
-        print()
+        print("[M] Intercepted", pt)
         return message
 
 
-def run_without_mitm(a_message, b_message):
+def run_without_mitm(message):
     a = A()
     b = B()
 
@@ -152,14 +146,12 @@ def run_without_mitm(a_message, b_message):
     b_init = b.process_init_message(a_init)
     a.process_init_message(b_init)
 
-    a_msg = a.send(a_message)
-    b.recv(a_msg)
-
-    b_msg = b.send(b_message)
+    a_msg = a.send(message)
+    b_msg = b.recv(a_msg)
     a.recv(b_msg)
 
 
-def run_with_mitm(a_message, b_message):
+def run_with_mitm(a_message):
     a = A()
     b = B()
     m = M()
@@ -176,20 +168,16 @@ def run_with_mitm(a_message, b_message):
 
     a_msg = a.send(a_message)
     m.spy_on_message(a_msg)
-    b.recv(a_msg)
-
-    b_msg = b.send(b_message)
+    b_msg = b.recv(a_msg)
     m.spy_on_message(b_msg)
     a.recv(b_msg)
 
 
 if __name__ == "__main__":
     run_without_mitm(
-            b'who fuses the music with no illusion, producing the blueprints? clueless?',
-            b'automator - defy the laws of nature - electronic monolith, throw a jam upon a disk'
+            b'who fuses the music with no illusions, producing the blueprints? clueless? automator - defy the laws of nature - electronic monolith, throw a jam upon a disk'
             )
     print("\n\n----\n\n")
     run_with_mitm(
-            b'my programming language is the strangest to come to grips with mechanized mischief',
-            b'kick it off with circular projectiles, x-files, heralded as the most important, dwarf the corporate'
+            b'my programming language is the strangest to come to grips with mechanized mischief'
             )
