@@ -44,7 +44,7 @@ class A:
         message = (self.p, self.g, self.A)
         print("[A] Sending p =", trunc(hex(self.p)))
         print("            g =", trunc(hex(self.g)))
-        print("            a =", trunc(hex(self.a)))
+        print("            A =", trunc(hex(self.A)))
         return message
 
     def process_init_message(self, message):
