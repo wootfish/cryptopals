@@ -33,14 +33,14 @@ class RSA:
 
     def __init__(self, p_size=None, p=None, q=None):
         p_size = p_size or self.default_prime_size
-        while True:
-            self._p = p or number.getPrime(p_size)
-            self._q = q or number.getPrime(p_size)
-            self._et = (self._p-1) * (self._q-1)
-            if self._et % self.e != 0 or None not in (p, q):
-                break
+        self._p = p or number.getPrime(p_size)
+        self._q = q or number.getPrime(p_size)
+
+        while (self._p-1) % self.e == 0: self._p = number.getPrime(p_size)
+        while (self._q-1) % self.e == 0: self._q = number.getPrime(p_size)
 
         self.n = self._p * self._q
+        self._et = (self._p-1) * (self._q-1)
         self._d = invmod(self.e, self._et)
 
         self.pubkey = (self.e, self.n)
