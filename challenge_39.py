@@ -3,41 +3,46 @@ from Crypto.Util import number
 from challenge_34 import trunc
 
 
-# egcd and invmod via wikibooks by way of stackoverflow:
-# https://en.wikibooks.org/wiki/Algorithm_Implementation/Mathematics/Extended_Euclidean_algorithm
-# https://stackoverflow.com/questions/4798654/modular-multiplicative-inverse-function-in-python/9758173#9758173
-
-
 class InvModException(Exception): pass
 
 
 def egcd(a, b):
-    if a == 0:
-        return (b, 0, 1)
-    else:
-        g, y, x = egcd(b % a, a)
-        return (g, x - (b // a) * y, y)
+    stack = []
+    while a != 0:
+        stack.append((a, b))
+        a, b = b % a, a
+
+    g, y, x = b, 0, 1
+
+    while stack:
+        a, b = stack.pop()
+        g, y, x = g, x - (b//a)*y, y
+
+    return g, y, x
 
 
 def invmod(a, m):
     g, x, y = egcd(a, m)
     if g != 1:
-        raise InvModException('modular inverse does not exist')
+        raise InvModException('no inverse')
     else:
         return x % m
 
 
 class RSA:
-    default_prime_size = 3072
+    default_prime_size = 2048
     e = 3
 
-    def __init__(self, p_size=None, p=None, q=None):
+    def __init__(self, p_size=None, p=None, q=None, quiet=True):
         p_size = p_size or self.default_prime_size
+        if not quiet: print("Generating p...")
         self._p = p or number.getPrime(p_size)
+        if not quiet: print("Generating q...")
         self._q = q or number.getPrime(p_size)
-
+        if not quiet: print("Checking p-1 and q-1 for divisibility by {}...".format(self.e))
         while (self._p-1) % self.e == 0: self._p = number.getPrime(p_size)
         while (self._q-1) % self.e == 0: self._q = number.getPrime(p_size)
+        if not quiet: print("p,q generated.")
 
         self.n = self._p * self._q
         self._et = (self._p-1) * (self._q-1)
@@ -71,7 +76,7 @@ if __name__ == "__main__":
 
     print("\nTrying RSA with {}-bit bignum primes.".format(rsa.default_prime_size))
     print("Generating keypair...")
-    rsa = RSA()
+    rsa = RSA(quiet=False)
     print("pubkey: e, n =", rsa.pubkey)
 
     pt_bytes = b'this is when you know who your real friends are'
