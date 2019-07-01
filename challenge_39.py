@@ -30,7 +30,7 @@ def invmod(a, m):
 
 
 class RSA:
-    default_prime_size = 2048
+    default_prime_size = 1024
     e = 3
 
     def __init__(self, p_size=None, p=None, q=None, quiet=True):
