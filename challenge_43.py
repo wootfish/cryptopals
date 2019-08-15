@@ -115,5 +115,3 @@ if __name__ == "__main__":
             break
     else:
         print("\nNo valid k found.")
-
-
