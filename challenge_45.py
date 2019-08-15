@@ -11,9 +11,9 @@ if __name__ == "__main__":
     #sig = d.sign(message)
     #print("signature:", sig)
 
-    # ^ this code actually hangs, because the _sign() function requests a new
-    # value of k whenever it notices r=0 (which will happen unconditionally
-    # when we set g=0)
+    # ^ the above code actually hangs, because the _sign() function requests a
+    # new value of k whenever it notices r=0 or s=0 (which happens
+    # unconditionally when we set g=0)
 
     DSA.g = DSA.p + 1  # p+1 is congruent to 1 mod p, of course
     d = DSA()
