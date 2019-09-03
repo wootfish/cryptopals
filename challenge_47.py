@@ -9,10 +9,10 @@ from os import urandom
 # ref: http://archiv.infsec.ethz.ch/education/fs08/secsem/Bleichenbacher98.pdf
 
 
-def pkcs1(D: bytes):
-    assert len(D) <= 32-11  # we need len(ps) >= 8, meaning len(d) <= 32 - (8+3)
-    ps = urandom(32 - (3+len(D)))
-    return b'\x00\x02' + ps + b'\x00' + D
+def pkcs1(m: bytes, mod_size=32):
+    assert len(m) <= mod_size-11  # we need len(ps) >= 8, meaning len(d) <= 32 - (8+3)
+    ps = urandom(mod_size - (3+len(m)))
+    return b'\x00\x02' + ps + b'\x00' + m
 
 
 def intersect(r1, r2):
