@@ -61,4 +61,4 @@ if __name__ == "__main__":
     if result is None:
         print("Search failed :(")
     else:
-        print(result)
+        print(result.decode('ascii'))  # should print: alert('Ayo, the Wu is back!');//000000000000bnS/U4lD-{)>ChwQjlMA
