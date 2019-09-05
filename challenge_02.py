@@ -10,11 +10,11 @@ def _bytes_xor(a: bytes, b: bytes) -> bytes:
     )
 
 
-def bytes_xor(*args: bytes) -> bytes:
+def bytes_xor(*args: bytes, quiet=True) -> bytes:
     assert len(args) > 0
     result = args[0]
     for arg in args[1:]:
-        print(result, arg)
+        if not quiet: print(result, arg)
         result = _bytes_xor(result, arg)
     return result
 
