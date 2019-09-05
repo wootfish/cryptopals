@@ -14,9 +14,10 @@ BOB_ID = 2
 MALLORY_ID = 3
 
 
-def cbc_mac(message, iv, key):
+def cbc_mac(message, iv, key, pad=True):
     cipher = AES.new(key, AES.MODE_CBC, iv)
-    return cipher.encrypt(pkcs7(message))[-16:]
+    if pad: message = pkcs7(message)
+    return cipher.encrypt(message)[-16:]
 
 
 _K = urandom(16)
