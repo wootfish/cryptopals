@@ -11,7 +11,7 @@ H_INITIAL = b'\x00'*4
 
 def C(M_i, H):
     # assumptions: len(M_i) == 8, len(H) == 4
-    cipher = Blowfish.new(H, Blowfish.MODE_ECB)
+    cipher = Blowfish.new(H, Blowfish.MODE_ECB)  # note: we do take a performance hit here (AES sets up faster than Blowfish)
     return cipher.encrypt(M_i)[:4]
 
 
