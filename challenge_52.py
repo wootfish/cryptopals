@@ -1,4 +1,4 @@
-from Crypto.Cipher import Blowfish  # allows smaller block & key sizes
+from Crypto.Cipher import Blowfish  # allows smaller block & key sizes than AES
 
 from challenge_08 import bytes_to_chunks
 from challenge_09 import pkcs7
@@ -6,13 +6,14 @@ from challenge_09 import pkcs7
 from itertools import count, product
 
 
-H_INITIAL = b'\x00'*4
+H_SIZE = 4
+H_INITIAL = b'\x00'*H_SIZE
 
 
 def C(M_i, H):
-    # assumptions: len(M_i) == 8, len(H) == 4
+    # assumptions: len(M_i) == 8, len(H) == H_SIZE
     cipher = Blowfish.new(H, Blowfish.MODE_ECB)  # note: we do take a performance hit here (AES sets up faster than Blowfish)
-    return cipher.encrypt(M_i)[:4]
+    return cipher.encrypt(M_i)[:H_SIZE]
 
 
 def MD(M, H=H_INITIAL, C=C):
