@@ -6,9 +6,11 @@ from challenge_09 import pkcs7
 from itertools import count, product
 
 
+PAD_LEN_FIELD_SIZE = 64  # same as sha1 (unlike all other params here lol)
 M_BLOCK_SIZE = 4
 H_SIZE = 2
 H_INITIAL = b'\x00'*H_SIZE
+
 
 AES_KEY_PADDING = b'\x00'*(16-H_SIZE)
 AES_BLOCK_PADDING = b'\x00'*(16-M_BLOCK_SIZE)
@@ -20,8 +22,19 @@ def C(M_i, H):
     return cipher.encrypt(M_i+AES_BLOCK_PADDING)[:H_SIZE]
 
 
-def MD(M, H=H_INITIAL, C=C):
-    blocks = bytes_to_chunks(pkcs7(M, M_BLOCK_SIZE), M_BLOCK_SIZE)
+def MD_PAD(msg):
+    l = len(msg) % 2**PAD_LEN_FIELD_SIZE
+    len_field = l.to_bytes(PAD_LEN_FIELD_SIZE, 'big')
+    zeroes_needed = -(len(msg) + 1 + PAD_LEN_FIELD_SIZE) % M_BLOCK_SIZE
+    padded = msg + b'\x01' + b'\x00'*zeroes_needed + len_field
+    return padded
+
+
+def MD(M, H=H_INITIAL, C=C, pad=True):
+    if pad:
+        M = MD_PAD(M)
+    assert len(M) % M_BLOCK_SIZE == 0
+    blocks = bytes_to_chunks(M, M_BLOCK_SIZE)
     for block in blocks:
         H = C(block, H)
     return H
