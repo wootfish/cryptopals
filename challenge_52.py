@@ -6,7 +6,7 @@ from challenge_09 import pkcs7
 from itertools import count, product
 
 
-M_BLOCK_SIZE = 8
+M_BLOCK_SIZE = 4
 H_SIZE = 2
 H_INITIAL = b'\x00'*H_SIZE
 
@@ -48,8 +48,9 @@ if __name__ == "__main__":
         else:
             raise Exception("no collisions found?!")  # should be impossible, per pigeonhole principle
 
-        for comb in product((0, 1), repeat=i):
+        for j, comb in enumerate(product((0, 1), repeat=i)):
             preimage = b''.join(colliding_blocks[j][comb[j]] for j in range(i))
-            print(f"MD(bytes.fromhex('{preimage.hex()}')) = {MD(preimage)}")
+            print(f"({j}/{2**i}) MD(bytes.fromhex('{preimage.hex()}')) = {MD(preimage)}")
+
         print("Total collisions:", 2**i)
         print()
