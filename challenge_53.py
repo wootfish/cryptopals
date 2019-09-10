@@ -10,6 +10,14 @@ from os import urandom
 # reference: https://www.schneier.com/academic/paperfiles/paper-preimages.pdf
 
 
+# FIXME: This one works as written but it's not quite a faithful implementation
+# of the paper's spec. Rather than generating a bridge block, it just looks for
+# an intermediate hash state equal to H_link. Also, the implementation of MD in
+# challenge_52.py uses PKCS7 for padding, rather than the length-suffix method
+# that I've just now realized Merkle-Damgard constructions usually use. This
+# inconsistency in challenge_52 could be masking other issues. TODO: fix.
+
+
 def make_vocal_track():
     vocal_loop = 'around the world'  # len = 16 chars
     vocal_track = ''
@@ -23,17 +31,26 @@ vocal_track = make_vocal_track()
 assert 2**k == len(vocal_track)
 
 
+def dump_state(msg):
+    H = H_INITIAL
+    for block in bytes_to_chunks(msg, M_BLOCK_SIZE):
+        H = C(block, H)
+        print(H.hex())
+
+
 def long_message_attack():
     print("\n[*] Making expandable message.")
     C, H_exp = make_expandable_message()
 
     print("\n[*] Looking for link block.")
-    j = find_link(H_exp)
+    M_link, j = find_link(H_exp)
 
     print(f"\n[*] Link found (j = {j}). Generating message for second-preimage collision...")
     M_blocks = bytes_to_chunks(vocal_track, M_BLOCK_SIZE)
     M_star = produce_message(C, j-1)
-    second_preimage = M_star + b''.join(M_blocks[j:])
+    second_preimage = M_star + M_link + b''.join(M_blocks[j+1:])
+    print("New message prefix:", M_star + M_link)
+    dump_state(M_star + M_link)
     return second_preimage
 
 
@@ -86,21 +103,27 @@ def hash_dummy_blocks(H, num_blocks):
 def find_link(H_exp):
     # break down our repeating string to the message block size
     blocks = bytes_to_chunks(vocal_track, M_BLOCK_SIZE)
-    len_blocks = len(blocks)  # precomputing this speeds up the loop
+    len_blocks = len(blocks)
 
-    # search through intermediate states until we find a link
-    print(2**k - k, "blocks to search.")
+    # precompute message states to speed up the search
     H = H_INITIAL
-    s = set()
+    message_states = []
     for i in range(2**k):
-        #if i & 0x1FFFF == 0:
-        #    print(end='.', flush=True)
         H = C(blocks[i%len_blocks], H)
-        s.add(H)
-        if i >= k and H == H_exp:
-            return i
+        message_states.append(H)
 
-    print("# of distinct blocks seen:", len(s))
+    # search through possible link blocks until we find one that works
+    for b in product(range(256), repeat=M_BLOCK_SIZE):
+        M_link = bytes(b)
+        H_link = C(M_link, H_exp)
+
+        if H_link in message_states:
+            ind = message_states.index(H_link)
+            if ind > k:
+                print("H_exp is", H_exp)
+                print("The winning H block is", H_link)
+                return M_link, ind
+
     raise Exception("No link block found :(")
 
 
@@ -122,6 +145,5 @@ if __name__ == "__main__":
     print()
     print("[*] Attack complete.")
     print(f"len(second_preimage) = {len(second_preimage)}")
-    print()
     print(f"MD({vocal_track[:32]}...{vocal_track[-32:]}) = {MD(vocal_track)}")
     print(f"MD({second_preimage[:32]}...{second_preimage[-32:]}) = {MD(second_preimage)}")
