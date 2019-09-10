@@ -10,14 +10,6 @@ from os import urandom
 # reference: https://www.schneier.com/academic/paperfiles/paper-preimages.pdf
 
 
-# FIXME: This one works as written but it's not quite a faithful implementation
-# of the paper's spec. Rather than generating a bridge block, it just looks for
-# an intermediate hash state equal to H_link. Also, the implementation of MD in
-# challenge_52.py uses PKCS7 for padding, rather than the length-suffix method
-# that I've just now realized Merkle-Damgard constructions usually use. This
-# inconsistency in challenge_52 could be masking other issues. TODO: fix.
-
-
 def make_vocal_track():
     vocal_loop = 'around the world'  # len = 16 chars
     vocal_track = ''
@@ -30,12 +22,14 @@ k = 20
 vocal_track = make_vocal_track()
 assert 2**k == len(vocal_track)
 
+#vocal_track = b'around the world'*2**16
 
-def dump_state(msg):
-    H = H_INITIAL
-    for block in bytes_to_chunks(msg, M_BLOCK_SIZE):
-        H = C(block, H)
-        print(H.hex())
+# ^ Uncomment if you want to see how the attack handles a more repetitive
+# input. The main difference is the bridge search has to work harder, because
+# the message gets the intermediate H values stuck in a cycle of length 589 --
+# much fewer than the 64637 H values seen when processing the default message.
+
+DUMMY_BLOCK = b'\xAA' * M_BLOCK_SIZE
 
 
 def long_message_attack():
@@ -45,12 +39,11 @@ def long_message_attack():
     print("\n[*] Looking for link block.")
     M_link, j = find_link(H_exp)
 
-    print(f"\n[*] Link found (j = {j}). Generating message for second-preimage collision...")
+    print(f"\n[*] Link found (j = {j}).")
+    print("\n[*] Generating message for second-preimage collision...")
     M_blocks = bytes_to_chunks(vocal_track, M_BLOCK_SIZE)
-    M_star = produce_message(C, j-1)
+    M_star = produce_message(C, j)
     second_preimage = M_star + M_link + b''.join(M_blocks[j+1:])
-    print("New message prefix:", M_star + M_link)
-    dump_state(M_star + M_link)
     return second_preimage
 
 
@@ -91,7 +84,6 @@ def find_collision(big_size, H):
     raise Exception("no collision found :(")  # should be impossible, per pigeonhole
 
 
-DUMMY_BLOCK = b'\x00' * M_BLOCK_SIZE
 def hash_dummy_blocks(H, num_blocks):
     for i in range(num_blocks):
         if i & 0xFFFF == 0:
@@ -120,8 +112,6 @@ def find_link(H_exp):
         if H_link in message_states:
             ind = message_states.index(H_link)
             if ind > k:
-                print("H_exp is", H_exp)
-                print("The winning H block is", H_link)
                 return M_link, ind
 
     raise Exception("No link block found :(")
@@ -130,20 +120,29 @@ def find_link(H_exp):
 def produce_message(C, L):
     assert k <= L <= 2**k + k - 1
     T = L - k
-    S = bin(T)[:2:-1]  # [:2:-1] reverses string & leaves off first 2 bytes ('0x')
-    M = b''.join(C[i][0 if bit == '0' else 1] for i, bit in enumerate(S))
+    S = bin(T)[:1:-1].ljust(k, '0')
+    M = b''
+    for i, bit in enumerate(S):
+        if bit == '0':
+            M += C[i][0]
+        else:
+            dummies = DUMMY_BLOCK * 2**i
+            M += dummies + C[i][1]
     return M
 
 
 if __name__ == "__main__":
-    #message = vocal_loop * 2**k
-    print()
-    print(f"[*] Message (len={len(vocal_track)}): {vocal_track[:1000].decode('ascii')}...")
-    print()
-    print("[*] Starting attack.")
+    print(f"\n[*] Message (len={len(vocal_track)}): {vocal_track[:1000].decode('ascii')}...")
+    print("\n[*] Starting attack.")
+
     second_preimage = long_message_attack()
+    assert len(vocal_track) == len(second_preimage)
+
+    hash_1 = MD(vocal_track)
+    hash_2 = MD(second_preimage)
+    assert hash_1 == hash_2
+
+    print(f"\n[*] Attack complete. len(second_preimage) = {len(second_preimage)}")
+    print(f"MD({vocal_track[:32]}...{vocal_track[-32:]}) = {hash_1}")
+    print(f"MD({second_preimage[:32]}...{second_preimage[-32:]}) = {hash_2}")
     print()
-    print("[*] Attack complete.")
-    print(f"len(second_preimage) = {len(second_preimage)}")
-    print(f"MD({vocal_track[:32]}...{vocal_track[-32:]}) = {MD(vocal_track)}")
-    print(f"MD({second_preimage[:32]}...{second_preimage[-32:]}) = {MD(second_preimage)}")
