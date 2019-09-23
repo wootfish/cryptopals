@@ -7,7 +7,7 @@ from challenge_08 import bytes_to_chunks
 
 
 def leftrotate(word: int, steps: int = 1, length: int = 32) -> int:
-    return ((word << steps) | (word >> (length - steps))) & (2**length - 1)
+    return ((word << steps) | (word >> (length - steps))) & ((1 << length) - 1)
 
 
 def sha1(message: bytes, state: Optional[Tuple[int]] = None,
