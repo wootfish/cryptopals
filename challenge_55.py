@@ -2,7 +2,6 @@ import struct
 import random
 
 from itertools import count
-from typing import Sequence
 
 from challenge_08 import bytes_to_chunks
 from challenge_28 import leftrotate
@@ -46,7 +45,7 @@ class Zeros(Constraint):
         return word & (1 << ind) == 0
 
     def ensure(self, ind, word: int, _):
-        mask = (2**32) - (1 + 2**ind)
+        mask = (1 << 32) - (1 + (1 << ind))
         return word & mask
 
 
@@ -58,7 +57,7 @@ class Ones(Constraint):
         return word & (1 << ind) != 0
 
     def ensure(self, ind, word: int, _):
-        return word | 2**ind
+        return word | (1 << ind)
 
 
 class Eqs(Constraint):
@@ -94,7 +93,7 @@ round_1 = [[Zeros(), Ones(), Eqs(6)],
 
 
 def rrot(word: int, steps: int = 1, length: int = 32) -> int:
-    return ((word >> steps) | (word << (length - steps))) & (2**length - 1)
+    return ((word >> steps) | (word << (length - steps))) & ((1 << length) - 1)
 
 
 def check_constraints(message, quiet=True):
@@ -129,7 +128,7 @@ def massage(message, quiet=True):
         for suite in round_1[k]:
             a_new = suite.massage(a_new, b)
         X_k_new = rrot(a_new, s) - a - F(b, c, d)
-        X[k] = X_k_new % 2**32
+        X[k] = X_k_new % (1 << 32)
         if not quiet:
             print(f"m'_{k} = {format(X[k], '#034b')}\n")
         return a_new
@@ -147,8 +146,8 @@ def massage(message, quiet=True):
 
 def apply_differential(m):
     words = bytes_to_chunks(m, 4)
-    for i, delta in ((1, 2**31), (2, 2**31 - 2**28), (12, -2**16)):
-        m_i = (struct.unpack("<I", words[i])[0] + delta) % (2**32)
+    for i, delta in ((1, 1 << 31), (2, (1 << 31) - (1 << 28)), (12, -(1 << 16))):
+        m_i = (struct.unpack("<I", words[i])[0] + delta) % (1 << 32)
         words[i] = struct.pack("<I", m_i)
     m_prime = b''.join(words)
     return m_prime
@@ -191,10 +190,11 @@ if __name__ == "__main__":
         m1 = massage(orig)
         m2 = apply_differential(m1)
 
-        try:
-            check_constraints(m1)
-        except ConstraintViolatedError:
-            print("Constraint violation detected: massaging message", orig.hex(), "failed")
+        # uncomment to confirm massaging is working (disabled for speed)
+        #try:
+        #    check_constraints(m1)
+        #except ConstraintViolatedError:
+        #    print("Constraint violation detected: massaging message", orig.hex(), "failed")
 
         if md4(m1) == md4(m2):
             print("Collision found!!")
