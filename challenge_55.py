@@ -1,7 +1,12 @@
 import struct
+import random
+
+from itertools import count
+from typing import Sequence
 
 from challenge_08 import bytes_to_chunks
-from challenge_30 import r1, r2, md4
+from challenge_28 import leftrotate
+from challenge_30 import F, r1, md4
 
 
 # reference: https://link.springer.com/content/pdf/10.1007%2F11426639_1.pdf
@@ -27,21 +32,22 @@ class Constraint:
                 if not quiet: print("Check failed:", self.failure_message.format(ind))
                 raise ConstraintViolatedError
 
-    def ensure(self, word):
-        raise NotImplementedError
+    def massage(self, word_1, word_2):
+        for ind in self.inds:
+            word_1 = self.ensure(ind, word_1, word_2)
+        return word_1
 
 
 class Zeros(Constraint):
     success_message = "0 bit at index {} found"
     failure_message = "0 bit at index {} not found"
 
-    def test(self, ind, word, _):
+    def test(self, ind, word: int, _):
         return word & (1 << ind) == 0
 
-    def ensure(self, word):
-        if self.check(word):
-            return word
-        raise NotImplementedError
+    def ensure(self, ind, word: int, _):
+        mask = (2**32) - (1 + 2**ind)
+        return word & mask
 
 
 class Ones(Constraint):
@@ -51,23 +57,22 @@ class Ones(Constraint):
     def test(self, ind, word, _):
         return word & (1 << ind) != 0
 
-    def ensure(self, word):
-        if self.check(word):
-            return word
-        raise NotImplementedError
+    def ensure(self, ind, word: int, _):
+        return word | 2**ind
 
 
 class Eqs(Constraint):
     success_message = "Equality constraint at index {} met"
     failure_message = "Equality constraint at index {} not met"
 
-    def test(self, ind, word_1, word_2):
-        return (word_1 ^ word_2) & (1 << ind) == 0
+    def _get_diff(self, ind, word_1, word_2):
+        return (word_1 ^ word_2) & (1 << ind)
 
-    def ensure(self, word):
-        if self.check(word):
-            return word
-        raise NotImplementedError
+    def test(self, ind, word_1, word_2):
+        return self._get_diff(ind, word_1, word_2) == 0
+
+    def ensure(self, ind, word_1: int, word_2: int):
+        return word_1 ^ self._get_diff(ind, word_1, word_2)
 
 
 round_1 = [[Zeros(), Ones(), Eqs(6)],
@@ -88,46 +93,115 @@ round_1 = [[Zeros(), Ones(), Eqs(6)],
            [Zeros(18, 29), Ones(25, 26, 28), Eqs()]]
 
 
-def check_round_1_constraints(message, quiet=False):
+def rrot(word: int, steps: int = 1, length: int = 32) -> int:
+    return ((word >> steps) | (word << (length - steps))) & (2**length - 1)
+
+
+def check_constraints(message, quiet=True):
     assert len(message) == 64
 
-    def t(i, cur_word, last_word):
-        if not quiet: print("Running tests for i =", i)
-        for suite in round_1[i]:
-            suite.check(cur_word, last_word, quiet=quiet)
-        #zeros, ones, eqs = round_1[i]
-        #zeros.check(cur_word, quiet=quiet)
-        #ones.check(cur_word, quiet=quiet)
-        #eqs.check(cur_word, last_word, quiet=quiet)
+    def f(a, b, c, d, k, s, X):
+        # serves as normal round function, but also checks constraint validity
+        a = r1(a, b, c, d, k, s, X)
+        if not quiet:
+            print("Running tests for k =", k)
+        for suite in round_1[k]:
+            suite.check(a, b, quiet=quiet)
+        return a
 
-    words = bytes_to_chunks(message, 4)
-    X = [struct.unpack("<I", word)[0] for word in words]
-    a, b, c, d = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476]
+    X = [struct.unpack("<I", word)[0] for word in bytes_to_chunks(message, 4)]
+    a, b, c, d = 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
 
-    a = r1(a,b,c,d,0x0,3,X);  t(0x0,a,b);  d = r1(d,a,b,c,0x1,7,X);  t(0x1,d,a);  c = r1(c,d,a,b,0x2,11,X);  t(0x2,c,d);  b = r1(b,c,d,a,0x3,19,X);  t(0x3,b,c);
-    a = r1(a,b,c,d,0x4,3,X);  t(0x4,a,b);  d = r1(d,a,b,c,0x5,7,X);  t(0x5,d,a);  c = r1(c,d,a,b,0x6,11,X);  t(0x6,c,d);  b = r1(b,c,d,a,0x7,19,X);  t(0x7,b,c);
-    a = r1(a,b,c,d,0x8,3,X);  t(0x8,a,b);  d = r1(d,a,b,c,0x9,7,X);  t(0x9,d,a);  c = r1(c,d,a,b,0xA,11,X);  t(0xA,c,d);  b = r1(b,c,d,a,0xB,19,X);  t(0xB,b,c);
-    a = r1(a,b,c,d,0xC,3,X);  t(0xC,a,b);  d = r1(d,a,b,c,0xD,7,X);  t(0xD,d,a);  c = r1(c,d,a,b,0xE,11,X);  t(0xE,c,d);  b = r1(b,c,d,a,0xF,19,X);  t(0xF,b,c);
+    a = f(a,b,c,d,0x0,3,X); d = f(d,a,b,c,0x1,7,X); c = f(c,d,a,b,0x2,11,X); b = f(b,c,d,a,0x3,19,X)
+    a = f(a,b,c,d,0x4,3,X); d = f(d,a,b,c,0x5,7,X); c = f(c,d,a,b,0x6,11,X); b = f(b,c,d,a,0x7,19,X)
+    a = f(a,b,c,d,0x8,3,X); d = f(d,a,b,c,0x9,7,X); c = f(c,d,a,b,0xA,11,X); b = f(b,c,d,a,0xB,19,X)
+    a = f(a,b,c,d,0xC,3,X); d = f(d,a,b,c,0xD,7,X); c = f(c,d,a,b,0xE,11,X); b = f(b,c,d,a,0xF,19,X)
+
+
+def massage(message, quiet=True):
+    assert len(message) == 64
+
+    def f(a, b, c, d, k, s, X):
+        # serves as normal round function, but also adjusts X as it goes
+        a_new = r1(a, b, c, d, k, s, X)
+        if not quiet:
+            print(f"m__{k} = {format(X[k], '#034b')}")
+        for suite in round_1[k]:
+            a_new = suite.massage(a_new, b)
+        X_k_new = rrot(a_new, s) - a - F(b, c, d)
+        X[k] = X_k_new % 2**32
+        if not quiet:
+            print(f"m'_{k} = {format(X[k], '#034b')}\n")
+        return a_new
+
+    X = [struct.unpack("<I", word)[0] for word in bytes_to_chunks(message, 4)]
+    a, b, c, d = 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
+
+    a = f(a,b,c,d,0x0,3,X); d = f(d,a,b,c,0x1,7,X); c = f(c,d,a,b,0x2,11,X); b = f(b,c,d,a,0x3,19,X)
+    a = f(a,b,c,d,0x4,3,X); d = f(d,a,b,c,0x5,7,X); c = f(c,d,a,b,0x6,11,X); b = f(b,c,d,a,0x7,19,X)
+    a = f(a,b,c,d,0x8,3,X); d = f(d,a,b,c,0x9,7,X); c = f(c,d,a,b,0xA,11,X); b = f(b,c,d,a,0xB,19,X)
+    a = f(a,b,c,d,0xC,3,X); d = f(d,a,b,c,0xD,7,X); c = f(c,d,a,b,0xE,11,X); b = f(b,c,d,a,0xF,19,X)
+
+    return b''.join(struct.pack("<I", word) for word in X)
+
+
+def apply_differential(m):
+    words = bytes_to_chunks(m, 4)
+    for i, delta in ((1, 2**31), (2, 2**31 - 2**28), (12, -2**16)):
+        m_i = (struct.unpack("<I", words[i])[0] + delta) % (2**32)
+        words[i] = struct.pack("<I", m_i)
+    m_prime = b''.join(words)
+    return m_prime
 
 
 def big_hex_to_lil_bytes(message):
-    # perversely, the paper use big-endian format for the messages in its
-    # example collisions. this helper function loads that hex into bytes,
-    # converting each word from big-endian to little-endian in the process
-    # (assuming words are space-delimited)
+    """
+    Perversely, the paper use big-endian format for the messages in its example
+    collisions. this helper function loads that hex into bytes, converting each
+    word from big-endian to little-endian in the process (assuming that words
+    are space-delimited, as they are in the paper).
+    """
     return b''.join(bytes.fromhex(h)[::-1] for h in message.split(" "))
 
 
+collision_1 = [big_hex_to_lil_bytes("4d7a9c83 56cb927a b9d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dd8e31 97e31fe5 2794bf08 b9e8c3e9"),
+               big_hex_to_lil_bytes("4d7a9c83 d6cb927a 29d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dc8e31 97e31fe5 2794bf08 b9e8c3e9")]
+collision_2 = [big_hex_to_lil_bytes("4d7a9c83 56cb927a b9d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dd8e31 97e31fe5 f713c240 a7b8cf69"),
+               big_hex_to_lil_bytes("4d7a9c83 d6cb927a 29d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dc8e31 97e31fe5 f713c240 a7b8cf69")]
+
+
 if __name__ == "__main__":
-    collision_1 = [big_hex_to_lil_bytes("4d7a9c83 56cb927a b9d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dd8e31 97e31fe5 2794bf08 b9e8c3e9"),
-                   big_hex_to_lil_bytes("4d7a9c83 d6cb927a 29d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dc8e31 97e31fe5 2794bf08 b9e8c3e9")]
-    collision_2 = [big_hex_to_lil_bytes("4d7a9c83 56cb927a b9d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dd8e31 97e31fe5 f713c240 a7b8cf69"),
-                   big_hex_to_lil_bytes("4d7a9c83 d6cb927a 29d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dc8e31 97e31fe5 f713c240 a7b8cf69")]
-    print("Checking example collisions from paper...")
-    assert md4(collision_1[0]) == md4(collision_1[1])
-    assert md4(collision_2[0]) == md4(collision_2[1])
-    print("Checking constraints on message 1...")
-    check_round_1_constraints(collision_1[0], quiet=True)
-    print("Checking constraints on message 2...")
-    check_round_1_constraints(collision_2[0], quiet=True)
-    print("Constraints met.")
+    print("Running tests.")
+    assert rrot(leftrotate(123456789, 10), 10) == 123456789
+    for collision in (collision_1, collision_2):
+        assert md4(collision[0]) == md4(collision[1])
+        check_constraints(collision[0])  # raises exception on failure
+        assert apply_differential(collision[0]) == collision[1]
+    print("Tests passed.")
+
+    #random.seed(b'some fairly long but otherwise arbitrary initial state'*100)
+    #random.seed(random.getrandbits(19937))
+
+    print("Searching for collisions..", end='')
+    for i in count():
+        if i & 0xFFFF == 0:
+            print(end=".", flush=True)
+
+        orig = bytes(random.getrandbits(8) for _ in range(64))
+        m1 = massage(orig)
+        m2 = apply_differential(m1)
+
+        try:
+            check_constraints(m1)
+        except ConstraintViolatedError:
+            print("Constraint violation detected: massaging message", orig.hex(), "failed")
+
+        if md4(m1) == md4(m2):
+            print("Collision found!!")
+            print(f"md4(bytes.fromhex('{m1.hex()}')) = {md4(m1)}")
+            print(f"md4(bytes.fromhex('{m2.hex()}')) = {md4(m2)}")
+            print()
+
+    message = massage(b'\x00'*64)
+    print(message.hex())
+    check_constraints(message, quiet=False)

@@ -12,6 +12,8 @@ from typing import Optional, Sequence, Tuple, Callable
 
 DEBUG = False
 
+MODULUS = 1 << 32
+
 
 def get_padding(message: bytes) -> bytes:
     ml = 8*len(message)  # message length, in bits
@@ -28,17 +30,17 @@ def H(x: int, y: int, z: int) -> int: return x ^ y ^ z
 
 
 def r1(a: int, b: int, c: int, d: int, k: int, s: int, X: Sequence[int]) -> int:
-    val = (a + F(b, c, d) + X[k]) % 2**32
+    val = (a + F(b, c, d) + X[k]) % MODULUS
     return leftrotate(val, s)
 
 
 def r2(a: int, b: int, c: int, d: int, k: int, s: int, X: Sequence[int]) -> int:
-    val = (a + G(b, c, d) + X[k] + 0x5A827999) % 2**32
+    val = (a + G(b, c, d) + X[k] + 0x5A827999) % MODULUS
     return leftrotate(val, s)
 
 
 def r3(a: int, b: int, c: int, d: int, k: int, s: int, X: Sequence[int]) -> int:
-    val = (a + H(b, c, d) + X[k] + 0x6ED9EBA1) % 2**32
+    val = (a + H(b, c, d) + X[k] + 0x6ED9EBA1) % MODULUS
     return leftrotate(val, s)
 
 
@@ -83,10 +85,10 @@ def md4(message: bytes, state: Optional[Sequence[int]] = None, padding_offset: i
         if DEBUG: print("3  ", hex(a), hex(b), hex(c), hex(d))
 
         # increment registers by their initial values
-        a = (a + aa) % 2**32
-        b = (b + bb) % 2**32
-        c = (c + cc) % 2**32
-        d = (d + dd) % 2**32
+        a = (a + aa) % MODULUS
+        b = (b + bb) % MODULUS
+        c = (c + cc) % MODULUS
+        d = (d + dd) % MODULUS
         if DEBUG: print("inc", hex(a), hex(b), hex(c), hex(d))
 
     return b''.join(struct.pack("<L", r) for r in (a, b, c, d))
