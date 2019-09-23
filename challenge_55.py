@@ -2,10 +2,17 @@ import struct
 import random
 
 from itertools import count
+from datetime import datetime
 
 from challenge_08 import bytes_to_chunks
 from challenge_28 import leftrotate
-from challenge_30 import F, r1, md4
+from challenge_30 import F, r1
+
+from Crypto.Hash import MD4  # way faster than native version from challenge 30
+
+
+def md4(msg):
+    return MD4.new(msg).digest()
 
 
 # reference: https://link.springer.com/content/pdf/10.1007%2F11426639_1.pdf
@@ -35,6 +42,9 @@ class Constraint:
         for ind in self.inds:
             word_1 = self.ensure(ind, word_1, word_2)
         return word_1
+
+    def ensure(self, ind, word_1, word_2):
+        raise NotImplementedError
 
 
 class Zeros(Constraint):
@@ -127,8 +137,7 @@ def massage(message, quiet=True):
             print(f"m__{k} = {format(X[k], '#034b')}")
         for suite in round_1[k]:
             a_new = suite.massage(a_new, b)
-        X_k_new = rrot(a_new, s) - a - F(b, c, d)
-        X[k] = X_k_new % (1 << 32)
+        X[k] = (rrot(a_new, s) - a - F(b, c, d)) % (1 << 32)
         if not quiet:
             print(f"m'_{k} = {format(X[k], '#034b')}\n")
         return a_new
@@ -175,18 +184,19 @@ if __name__ == "__main__":
     for collision in (collision_1, collision_2):
         assert md4(collision[0]) == md4(collision[1])
         check_constraints(collision[0])  # raises exception on failure
+        assert massage(collision[0]) == collision[0]  # shouldn't need to correct any constraints
         assert apply_differential(collision[0]) == collision[1]
+    message = massage(b'\x00'*64)
+    check_constraints(message)
     print("Tests passed.")
 
-    #random.seed(b'some fairly long but otherwise arbitrary initial state'*100)
-    #random.seed(random.getrandbits(19937))
-
+    print(datetime.now())
     print("Searching for collisions..", end='')
     for i in count():
         if i & 0xFFFF == 0:
             print(end=".", flush=True)
 
-        orig = bytes(random.getrandbits(8) for _ in range(64))
+        orig = random.getrandbits(512).to_bytes(64, 'big')
         m1 = massage(orig)
         m2 = apply_differential(m1)
 
@@ -197,11 +207,9 @@ if __name__ == "__main__":
         #    print("Constraint violation detected: massaging message", orig.hex(), "failed")
 
         if md4(m1) == md4(m2):
+            print()
+            print(datetime.now())
             print("Collision found!!")
             print(f"md4(bytes.fromhex('{m1.hex()}')) = {md4(m1)}")
             print(f"md4(bytes.fromhex('{m2.hex()}')) = {md4(m2)}")
             print()
-
-    message = massage(b'\x00'*64)
-    print(message.hex())
-    check_constraints(message, quiet=False)
