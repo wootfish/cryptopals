@@ -17,6 +17,10 @@ def md4(msg):
 
 # reference: https://link.springer.com/content/pdf/10.1007%2F11426639_1.pdf
 
+# first collision (found after six and a half hours of searching with only round-1 constraints enforced):
+# md4(bytes.fromhex('232acb10bc1fed8a286ccf95840c41aa68303defcbfa35e0dd3a4e060fdf71fc94b15959e10faf6da86a740b24ed2da1850fee352735f4752a82ca687e1173d2')) == md4(bytes.fromhex('232acb10bc1fed0a286ccf05840c41aa68303defcbfa35e0dd3a4e060fdf71fc94b15959e10faf6da86a740b24ed2da1850fed352735f4752a82ca687e1173d2')) == b'\x9dR:)\xf6(}\x1c\xd5<\xa8\xc0#\x99\xba?'
+# see https://twitter.com/elisohl/status/1176283712838782976
+
 
 class ConstraintViolatedError(Exception): pass
 
