@@ -1,14 +1,18 @@
 import struct
 import random
 
-from itertools import count
+from itertools import count, product
 from datetime import datetime
 
+from challenge_02 import bytes_xor
 from challenge_08 import bytes_to_chunks
 from challenge_28 import leftrotate
 from challenge_30 import F, G, r1, r2
 
 from Crypto.Hash import MD4  # way faster than native version from challenge 30
+
+
+MODULUS = 1 << 32
 
 
 def md4(msg):
@@ -60,7 +64,7 @@ class Zeros(Constraint):
 
     @staticmethod
     def ensure(ind, word: int, _):
-        mask = (1 << 32) - (1 + (1 << ind))
+        mask = MODULUS - (1 + (1 << ind))
         return word & mask
 
 
@@ -113,8 +117,10 @@ round_1 = [[Eqs(6)],
 
 
 round_2 = [[Zeros(26), Ones(25, 28, 31), Eqs(18)],
-           [],  # constraints for d_5 omitted here & hardcoded below b/c they are weird
-           []]  # c5 etc TODO
+           [Eqs(28, 31)],
+           [],  #[Eqs(25, 26, 28, 29, 31)],
+           [], #[Zeros(31), Ones(29), Eqs(28)]]
+           [Ones(28)]]
 
 
 def rrot(word: int, steps: int = 1, length: int = 32) -> int:
@@ -141,20 +147,28 @@ def check_constraints(message, quiet=True):
     a = f(a,b,c,d,0x8,3,X); d = f(d,a,b,c,0x9,7,X); c = f(c,d,a,b,0xA,11,X); b = f(b,c,d,a,0xB,19,X)
     a = f(a,b,c,d,0xC,3,X); d = f(d,a,b,c,0xD,7,X); c = f(c,d,a,b,0xE,11,X); b = f(b,c,d,a,0xF,19,X)
 
+    if not quiet: print("Running second-round tests")
+
     # a5
+    if not quiet: print("a_5")
     a = r2(a,b,c,d,0x0,3,X)
     for suite in round_2[0]:
-        suite.check(a, c)
+        suite.check(a, c, quiet=quiet)
 
     # d5
-    #d = r2(d,a,b,c,0x4,5,X)
-    #Eqs(18).check(d, a)
-    #Eqs(25, 26, 28, 31).check(d, a)
+    if not quiet: print("d_5")
+    d = r2(d,a,b,c,0x4,5,X)
+    round_2[1][0].check(d, a, quiet=quiet)
 
-    ## c5
-    #c = r2(c,d,a,b,0x8,9,X)
-    #for suite in round_2[2]:
-    #    suite.check(c, d)
+    # c5, b5
+    c = r2(c,d,a,b,0x8,9,X)
+    b = r2(b,c,d,a,12,13,X)
+
+    # a6
+    if not quiet: print("a_6")
+    a = r2(a,b,c,d,1,3,X)
+    round_2[4][0].check(a, b, quiet=quiet)
+
 
 
 def massage(message, quiet=True):
@@ -173,55 +187,73 @@ def massage(message, quiet=True):
             print(f"m__{k} = {format(X[k], '#034b')}")
         for suite in round_1[k]:
             a_new = suite.massage(a_new, b)
-        X[k] = (rrot(a_new, s) - a - F(b, c, d)) % (1 << 32)
+        X[k] = (rrot(a_new, s) - a - F(b, c, d)) % MODULUS
         if not quiet:
             print(f"m'_{k} = {format(X[k], '#034b')}\n")
         state_log.append(a_new)
         return a_new
+
+    def r1_inv(k, rot):
+        # returns a message value tailored to produce the expected intermediate states
+        return (rrot(state_log[k+4], rot) - state_log[k] - F(state_log[k+3], state_log[k+2], state_log[k+1])) % MODULUS
 
     a = f(a,b,c,d,0x0,3,X); d = f(d,a,b,c,0x1,7,X); c = f(c,d,a,b,0x2,11,X); b = f(b,c,d,a,0x3,19,X)
     a = f(a,b,c,d,0x4,3,X); d = f(d,a,b,c,0x5,7,X); c = f(c,d,a,b,0x6,11,X); b = f(b,c,d,a,0x7,19,X)
     a = f(a,b,c,d,0x8,3,X); d = f(d,a,b,c,0x9,7,X); c = f(c,d,a,b,0xA,11,X); b = f(b,c,d,a,0xB,19,X)
     a = f(a,b,c,d,0xC,3,X); d = f(d,a,b,c,0xD,7,X); c = f(c,d,a,b,0xE,11,X); b = f(b,c,d,a,0xF,19,X)
 
-    # enforce round 2 conditions (these are a bit fussier than round 1)
+    # enforce round 2 constraints
+
+    # these are a bit fussier than round 1 constraints so only the ones that
+    # (usually) play nice with round 1 constraints get enforced
     ROUND_2_CONST = 0x5A827999
 
-    # a5:
+    # a5
     a_4 = a
     a = r2(a,b,c,d,0,3,X)
     for suite in round_2[0]:
         a = suite.massage(a, c)
-    X[0] = (rrot(a, 3) - a_4 - G(b, c, d) - ROUND_2_CONST) % (1 << 32)
-    state_log[4] = r1(state_log[0], state_log[3], state_log[2], state_log[1], 0, 3, X)
-
-    # keep our changes to X[0] from impacting any round-1 states aside from a_1
-    X[1] = (rrot(state_log[5], 7) - state_log[1] - F(state_log[4], state_log[3], state_log[2])) % (1 << 32)
-    X[2] = (rrot(state_log[6],11) - state_log[2] - F(state_log[5], state_log[4], state_log[3])) % (1 << 32)
-    X[3] = (rrot(state_log[7],19) - state_log[3] - F(state_log[6], state_log[5], state_log[4])) % (1 << 32)
-    X[4] = (rrot(state_log[8], 3) - state_log[4] - F(state_log[7], state_log[6], state_log[5])) % (1 << 32)
+    X[0] = (rrot(a, 3) - a_4 - G(b, c, d) - ROUND_2_CONST) % MODULUS
+    state_log[4] = r1(state_log[0], state_log[3], state_log[2], state_log[1], 0, 3, X)  # adjust a_1
+    X[1] = r1_inv(1, 7);
+    X[2] = r1_inv(2, 11);
+    X[3] = r1_inv(3, 19);
+    X[4] = r1_inv(4, 3)
 
     # d5
-    #d_4 = d
-    #d = r2(d,a,b,c,4,5,X)
-    #d = Zeros(18).massage(d, a)
-    #d = Zeros(25, 26, 28, 31).massage(d, b)
-    #X[1] = (rrot(d, 5) - d_4 - G(a, b, c) - ROUND_2_CONST) % (1 << 32)
-    #state_log[5] = r1(state_log[1], state_log[4], state_log[3], state_log[2], 1, 7, X)
+    d_4 = d
+    d = r2(d,a,b,c,4,5,X)
+    d = round_2[1][0].massage(d, b)
+    X[4] = (rrot(d, 5) - d_4 - G(a, b, c) - ROUND_2_CONST) % MODULUS
+    state_log[8] = r1(state_log[4], state_log[7], state_log[6], state_log[5], 4, 3, X)  # adjust d_1
+    X[5] = r1_inv(5, 7);
+    X[6] = r1_inv(6, 11);
+    X[7] = r1_inv(7, 19);
+    X[8] = r1_inv(8, 3)
 
-    ## message corrections
-    #X[2] = (rrot(state_log[6],11) - state_log[2] - F(d1_prime, a1_prime, state_log[3])) % (1 << 32)
-    #X[3] = (rrot(state_log[7],19) - state_log[3] - F(state_log[6], d1_prime, a1_prime)) % (1 << 32)
-    #X[4] = (rrot(state_log[8], 3) - a1_prime - F(state_log[7], state_log[6], d1_prime)) % (1 << 32)
-    #X[5] = (rrot(state_log[9], 7) - d1_prime - F(state_log[8], state_log[7], state_log[6])) % (1 << 32)
+    # just skip over these two (c5 and b5)
+    c = r2(c,d,a,b,8,9,X)
+    b = r2(b,c,d,a,12,13,X)
+
+    # a6
+    a_5 = a
+    a = r2(a,b,c,d,1,3,X)
+    a = round_2[4][0].massage(a, b)
+    X[1] = (rrot(a, 3) - a_5 - G(b, c, d) - ROUND_2_CONST) % MODULUS
+    state_log[5] = r1(state_log[1], state_log[4], state_log[3], state_log[2], 1, 7, X)
+    X[2] = r1_inv(2, 11)
+    X[3] = r1_inv(3, 19)
+    X[4] = r1_inv(4, 3)
+    X[5] = r1_inv(5, 7)
 
     return b''.join(struct.pack("<I", word) for word in X)
 
 
+DIFFERENTIALS = ((1, 1 << 31), (2, (1 << 31) - (1 << 28)), (12, -(1 << 16)))
 def apply_differential(m):
     words = bytes_to_chunks(m, 4)
-    for i, delta in ((1, 1 << 31), (2, (1 << 31) - (1 << 28)), (12, -(1 << 16))):
-        m_i = (struct.unpack("<I", words[i])[0] + delta) % (1 << 32)
+    for i, delta in DIFFERENTIALS:
+        m_i = (struct.unpack("<I", words[i])[0] + delta) % MODULUS
         words[i] = struct.pack("<I", m_i)
     m_prime = b''.join(words)
     return m_prime
@@ -264,7 +296,7 @@ if __name__ == "__main__":
     #    check_constraints(collision[0])  # raises exception on failure
     #    assert massage(collision[0]) == collision[0]  # shouldn't need to correct any constraints
 
-    check_constraints(massage(bytes(64)))
+    check_constraints(massage(bytes(64)), quiet=False)
     print("Basic tests passed.")
 
     print(datetime.now())
@@ -278,10 +310,12 @@ if __name__ == "__main__":
         m2 = apply_differential(m1)
 
         # uncomment to confirm massaging is working (disabled for speed)
-        try:
-            check_constraints(m1)
-        except ConstraintViolatedError:
-            print("Constraint violation detected: massaging message", orig.hex(), "failed")
+        #try:
+        #    check_constraints(m1)
+        #except ConstraintViolatedError:
+        #    print("Constraint violation detected: massaging message", orig.hex(), "failed")
+        #else:
+        #    print("this one's a-ok")
 
         if md4(m1) == md4(m2):
             print()
