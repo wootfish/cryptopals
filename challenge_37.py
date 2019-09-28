@@ -12,13 +12,13 @@ if __name__ == "__main__":
     c = Client()
     s = Server()
 
-    client_1 = c.auth_1()
-    server_1 = s.auth_1(client_1)
-    client_2 = c.auth_2(server_1)
-    server_2 = s.auth_2(client_2)
-    c.auth_3(server_2)
+    client_msg_1 = c.auth_1()
+    server_msg_1 = s.auth_1(client_msg_1)
+    client_msg_2 = c.auth_2(server_msg_1)
+    server_msg_2 = s.auth_2(client_msg_2)
+    c.auth_3(server_msg_2)
 
-    print("\n\n\n")
+    print()
 
     # these values don't actually change within the loop since all the values
     # of A used are congruent to 0 mod N
@@ -27,14 +27,13 @@ if __name__ == "__main__":
 
     for i in range(4):
         s = Server()
-
-        print("[*] Trying attack with A = {}*N".format(i))
-
+        print("\n[*] Trying attack with A = {}*N".format(i))
         try:
             A = i*N
             client_1 = (I, A)
             salt, _ = s.auth_1(client_1)
             salt_hmac = hmac(K, salt)
+
             print("[C] Sending HMAC =", salt_hmac)
             result = s.auth_2((salt_hmac,))
 
@@ -46,4 +45,4 @@ if __name__ == "__main__":
         except OverflowError:
             print("[*] Value of A rejected by server (too large).")
 
-        print("\n\n")
+        print()

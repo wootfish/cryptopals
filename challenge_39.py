@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from Crypto.Util import number
 
 from challenge_34 import trunc
@@ -6,7 +8,7 @@ from challenge_34 import trunc
 class InvModException(Exception): pass
 
 
-def egcd(a, b):
+def egcd(a: int, b: int) -> Tuple[int, int, int]:
     stack = []
     while a != 0:
         stack.append((a, b))
@@ -21,7 +23,7 @@ def egcd(a, b):
     return g, y, x
 
 
-def invmod(a, m):
+def invmod(a: int, m: int) -> int:
     g, x, y = egcd(a, m)
     if g != 1:
         raise InvModException('no inverse')

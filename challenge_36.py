@@ -1,6 +1,7 @@
 from os import urandom
 from random import randrange
 from hashlib import sha256
+from typing import Tuple
 
 from challenge_31 import hmac
 
@@ -20,7 +21,7 @@ class Server:
         x = int.from_bytes(xH, 'big')
         self.v = pow(g, x, N)
 
-    def auth_1(self, message):
+    def auth_1(self, message: Tuple[bytes, int]) -> Tuple[bytes, int]:
         # Input:  C->S Send I, A=g**a % N (a la Diffie Hellman)
         # Output: S->C Send salt, B=kv + g**b % N
 
@@ -42,7 +43,7 @@ class Server:
 
         return (self.salt, B)
 
-    def auth_2(self, message):
+    def auth_2(self, message: Tuple[bytes]) -> Tuple[str]:
         hmac_attempt = message[0]
         if hmac_attempt == hmac(self.K, self.salt):
             print("[S] Client authentication accepted.")
@@ -55,11 +56,11 @@ class Client:
     def __init__(self):
         self.a = randrange(0, N)
 
-    def auth_1(self):
+    def auth_1(self) -> Tuple[bytes, int]:
         self.A = pow(g, self.a, N)
         return (I, self.A)
 
-    def auth_2(self, message):
+    def auth_2(self, message: Tuple[bytes, int]) -> Tuple[bytes]:
         salt, B = message
 
         xH_preimage = salt + P
@@ -80,7 +81,7 @@ class Client:
 
         return (hmac(K, salt),)
 
-    def auth_3(self, message):
+    def auth_3(self, message: Tuple[str]):
         assert message == ("OK",)
         print("[C] *hacker voice* I'M IN.")
 

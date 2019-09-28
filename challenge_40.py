@@ -1,7 +1,7 @@
+from sympy import S, Rational  # type: ignore
+
 from challenge_34 import trunc
 from challenge_39 import RSA, invmod
-
-from sympy import S, N, Rational
 
 
 if __name__ == "__main__":

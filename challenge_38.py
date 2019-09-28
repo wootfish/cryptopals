@@ -1,6 +1,6 @@
 from os import urandom
 from random import choice, randrange, sample
-
+from typing import Tuple
 from hashlib import sha256
 
 from challenge_31 import hmac
@@ -13,29 +13,29 @@ I = b"eli@sohl.com"
 
 
 class Server:
-    def __init__(self, password):
-        self.P = password
+    def __init__(self, password: bytes):
+        self._P = password
         self.salt = urandom(32)
-        self.b = randrange(0, N)
-        xH = sha256(self.salt + self.P).digest()
+        self._b = randrange(0, N)
+        xH = sha256(self.salt + self._P).digest()
         x = int.from_bytes(xH, 'big')
         self.v = pow(g, x, N)
         print("[S] Initialized with password", password)
 
-    def auth_1(self, message):
-        _I, A = message
-        assert _I == I
-        B = pow(g, self.b, N)
+    def auth_1(self, message: Tuple[bytes, int]) -> Tuple[bytes, int, int]:
+        I_from_msg, A = message
+        assert I_from_msg == I
+        B = pow(g, self._b, N)
 
         # precompute u, S, K
         self.u = int.from_bytes(urandom(16), 'big')
-        S = pow(A * pow(self.v, self.u, N), self.b, N)
+        S = pow(A * pow(self.v, self.u, N), self._b, N)
         self.K = sha256(S.to_bytes(192, 'big')).digest()
 
         print("[S] K =", self.K.hex())
         return (self.salt, B, self.u)
 
-    def auth_2(self, message):
+    def auth_2(self, message: Tuple[bytes]) -> Tuple[str]:
         hmac_attempt = message[0]
         if hmac_attempt == hmac(self.K, self.salt):
             print("[S] Client authentication accepted.")
@@ -45,19 +45,19 @@ class Server:
 
 
 class Client:
-    def __init__(self, password):
+    def __init__(self, password: bytes):
         self.a = randrange(0, N)
-        self.P = password
+        self._P = password
         print("[C] Initialized with password", password)
 
-    def auth_1(self):
+    def auth_1(self) -> Tuple[bytes, int]:
         self.A = pow(g, self.a, N)
         return (I, self.A)
 
-    def auth_2(self, message):
+    def auth_2(self, message: Tuple[bytes, int, int]) -> Tuple[bytes]:
         salt, B, u = message
 
-        xH = sha256(salt + self.P).digest()
+        xH = sha256(salt + self._P).digest()
         x = int.from_bytes(xH, 'big')
         S = pow(B, self.a + u*x, N)
         K = sha256(S.to_bytes(192, 'big')).digest()
@@ -66,7 +66,7 @@ class Client:
 
         return (hmac(K, salt),)
 
-    def auth_3(self, message):
+    def auth_3(self, message: Tuple[str]):
         assert message == ("OK",)
         print("[C] *hacker voice* I'M IN.")
 
@@ -81,19 +81,19 @@ if __name__ == "__main__":
     c = Client(_password)
     s = Server(_password)
 
-    client_1 = c.auth_1()
-    server_1 = s.auth_1(client_1)
-    client_2 = c.auth_2(server_1)
-    server_2 = s.auth_2(client_2)
-    c.auth_3(server_2)
+    client_msg_1 = c.auth_1()
+    server_msg_1 = s.auth_1(client_msg_1)
+    client_msg_2 = c.auth_2(server_msg_1)
+    server_msg_2 = s.auth_2(client_msg_2)
+    c.auth_3(server_msg_2)
 
     print("\n\n[*] Simulating attack against client...")
+    c = Client(_password)  # we only need a client for this attack
     b = randrange(0, N)
     B = pow(g, b, N)
     u = int.from_bytes(urandom(16), 'big')
     salt = urandom(32)
 
-    c = Client(_password)
     _, A = c.auth_1()
     c_hmac = c.auth_2((salt, B, u))[0]
 
