@@ -3,6 +3,8 @@ Set 1, Challenge 6
 """
 
 
+import base64
+
 from itertools import combinations
 from pprint import pprint
 from typing import List, Tuple, Dict
@@ -10,7 +12,6 @@ from typing import List, Tuple, Dict
 from challenge_02 import bytes_xor
 from challenge_03 import crack_xor_cipher
 from challenge_05 import repeating_key_xor
-from challenge_06_util import hamming_distance
 
 
 def hamming_distance(a: bytes, b: bytes) -> int:
@@ -66,13 +67,7 @@ def crack_repeating_key_xor(ciphertext: bytes, keysize: int) -> Tuple[float, byt
 if __name__ == "__main__":
     assert hamming_distance(b'this is a test', b'wokka wokka!!!') == 37
 
-    import sys
-    import base64
-
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python3 challenge_06.py filename")
-
-    with open(sys.argv[1]) as f:
+    with open("data/06.txt") as f:
         b64 = f.read()
     ciphertext = base64.b64decode(b64)
 
@@ -81,10 +76,11 @@ if __name__ == "__main__":
     pprint(keysizes)
     print()
 
-    candidates = [crack_repeating_key_xor(ciphertext, guess)
-                  for score, guess in keysizes]
+    candidates = [crack_repeating_key_xor(ciphertext, guess) for score, guess in keysizes]
     candidates.sort()
     top_key = candidates[0][1]
 
-    print("Top guess: key =", top_key, "plaintext = \\")
+    print("Top guess:")
+    print("key =", top_key)
+    print("plaintext =\n")
     print(repeating_key_xor(top_key, ciphertext).decode("ascii"))
