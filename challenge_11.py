@@ -3,14 +3,14 @@
 
 from os import urandom
 from random import choice, randint
-from typing import Callable
+from typing import Tuple, Callable
 
 from Crypto.Cipher import AES
 
 from challenge_09 import pkcs7
 
 
-def get_black_box() -> Callable[[bytes], bytes]:
+def get_black_box() -> Tuple[str, Callable[[bytes], bytes]]:
     mode = choice(("ECB", "CBC"))
 
     def black_box(plaintext: bytes) -> bytes:
@@ -26,10 +26,9 @@ def get_black_box() -> Callable[[bytes], bytes]:
     return mode, black_box
 
 
-def detector(func: Callable[[bytes], bytes]):
+def detector(func: Callable[[bytes], bytes]) -> str:
     plaintext = b'\x00' * 16 * 4  # four blocks of zero bytes
     ciphertext = func(plaintext)
-    #print(plaintext, ciphertext)
     if ciphertext[16:32] == ciphertext[32:48]:
         return "ECB"
     else:
@@ -40,4 +39,5 @@ if __name__ == "__main__":
     for _ in range(17):
         mode, box = get_black_box()
         guess = detector(box)
-        print("Actual:", mode, "Guessed:", guess)
+        print("Actual:", mode, "  Guessed:", guess)
+        assert mode == guess

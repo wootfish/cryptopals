@@ -1,3 +1,5 @@
+import base64
+
 from Crypto.Cipher import AES
 
 from challenge_02 import bytes_xor
@@ -5,7 +7,7 @@ from challenge_07 import aes_ecb_decrypt
 from challenge_08 import bytes_to_chunks
 
 
-def aes_cbc_decrypt(key: bytes, ciphertext: bytes, iv: bytes):
+def aes_cbc_decrypt(key: bytes, ciphertext: bytes, iv: bytes) -> bytes:
     chunks = bytes_to_chunks(ciphertext, 16)
     prev_ct = iv
     plaintext = b''
@@ -16,12 +18,7 @@ def aes_cbc_decrypt(key: bytes, ciphertext: bytes, iv: bytes):
 
 
 if __name__ == "__main__":
-    import sys
-    import base64
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python3 challenge_10.py filename")
-
-    with open(sys.argv[1]) as f:
+    with open("data/10.txt") as f:
         b64 = f.read()
     ciphertext = base64.b64decode(b64)
     plaintext = aes_cbc_decrypt(b'YELLOW SUBMARINE', ciphertext, b'\x00'*16)

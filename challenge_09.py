@@ -19,3 +19,5 @@ if __name__ == "__main__":
     padded = pkcs7(plaintext, block_size)
     print("Before:", plaintext)
     print("After:", padded)
+    assert padded == b"YELLOW SUBMARINE\x04\x04\x04\x04"
+    print("Check passed.")

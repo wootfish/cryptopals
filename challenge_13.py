@@ -1,7 +1,7 @@
 from Crypto.Cipher import AES
 
 from os import urandom
-from typing import Dict, Union, Tuple
+from typing import Dict, Union, Tuple, Sequence
 
 from challenge_09 import pkcs7, strip_pkcs7
 
@@ -9,36 +9,26 @@ from challenge_09 import pkcs7, strip_pkcs7
 key = urandom(16)
 
 
-# we don't care about key order when we're parsing a profile, but we definitely
-# /do/ care about it when we're creating one
-TYPE_PROFILE_IN = Tuple[Tuple[bytes, Union[bytes, int]]]
-TYPE_PROFILE_OUT = Dict[bytes, Union[bytes, int]]
-
-
-def profile_parse(profile: bytes) -> TYPE_PROFILE_OUT:
+def profile_parse(profile: bytes) -> Dict[bytes, bytes]:
     kv_pairs = profile.split(b"&")
     parsed = {
-        key: int(value) if value.isdigit() else value
-        for key, value in [pair.split(b"=") for pair in kv_pairs]
+        key: value for key, value in [pair.split(b"=") for pair in kv_pairs]
     }
     return parsed
 
 
-def profile_build(t: TYPE_PROFILE_IN) -> bytes:
-    result = b'&'.join(
-        key + b'=' + (str(val).encode('ascii') if type(val) is int else val)
-        for key, val in t
-    )
+def profile_build(t: Sequence[Tuple[bytes, bytes]]) -> bytes:
+    result = b'&'.join(key + b'=' + val for key, val in t)
     return result
 
 
 def profile_for(email: bytes) -> bytes:
     # I'm assuming from context here that we aren't meant to do any email
-    # validation beyond rejecting profile metacharacters (i.e. no RFC 5322)
+    # validation beyond rejecting profile metacharacters (so like, no RFC 5322)
     email = email.translate(None, b'&=')
     result = profile_build((
         (b'email', email),
-        (b'uid', 10),
+        (b'uid', b'10'),
         (b'role', b'user')
         ))
     return result
@@ -50,7 +40,7 @@ def enc_profile(email: bytes) -> bytes:
     return cipher.encrypt(pkcs7(profile))
 
 
-def dec_profile(encrypted: bytes) -> TYPE_PROFILE_OUT:
+def dec_profile(encrypted: bytes) -> Dict[bytes, bytes]:
     cipher = AES.new(key, AES.MODE_ECB)
     plaintext = strip_pkcs7(cipher.decrypt(encrypted))
     return profile_parse(plaintext)

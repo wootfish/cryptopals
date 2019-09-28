@@ -1,7 +1,7 @@
 from challenge_09 import strip_pkcs7, PaddingError
 
 
-def test():
+if __name__ == "__main__":
     assert strip_pkcs7(b"ICE ICE BABY\x04\x04\x04\x04") == b"ICE ICE BABY"
 
     try:
@@ -9,21 +9,13 @@ def test():
     except PaddingError:
         pass
     else:
-        assert False  # failed to raise exception
+        raise Exception("program accepted invalid padding")
 
     try:
         strip_pkcs7(b"ICE ICE BABY\x01\x02\x03\x04")
     except PaddingError:
         pass
     else:
-        assert False  # failed to raise exception
+        raise Exception("program accepted invalid padding")
 
-
-
-if __name__ == "__main__":
-    test()
-
-    import sys
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python3 challenge_15.py padded")
-    print(strip_pkcs7(sys.argv[1].encode("ascii")))
+    print("Tests passed.")

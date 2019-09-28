@@ -1,6 +1,6 @@
 from itertools import count
 from base64 import b64decode
-from typing import Callable
+from typing import Callable, Tuple
 from os import urandom
 
 from Crypto.Cipher import AES
@@ -9,23 +9,23 @@ from challenge_09 import pkcs7
 from challenge_11 import detector
 
 
-secret_postfix = b64decode("""
+_secret_postfix = b64decode("""
 Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
 aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
 dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
 YnkK
 """)
 
-key = urandom(16)
+_key = urandom(16)
 
 
 def enc(plaintext: bytes) -> bytes:
-    plaintext = pkcs7(plaintext + secret_postfix)
-    cipher = AES.new(key, AES.MODE_ECB)
+    plaintext = pkcs7(plaintext + _secret_postfix)
+    cipher = AES.new(_key, AES.MODE_ECB)
     return cipher.encrypt(plaintext)
 
 
-def discover_block_size_and_postfix_length(enc: Callable[[bytes], bytes]) -> int:
+def find_block_size_and_postfix_length(enc: Callable[[bytes], bytes]) -> Tuple[int, int]:
     # we need to know the postfix length to have a clean termination condition
     # for the decryption loop, but taking len(postfix) feels like cheating, so
     # this function just figures it out in tandem w/ finding the block size
@@ -35,11 +35,12 @@ def discover_block_size_and_postfix_length(enc: Callable[[bytes], bytes]) -> int
         if l2 > l:
             block_size = l2 - l
             postfix_len = l - i
-            return block_size, postfix_len
+            break
+    return block_size, postfix_len
 
 
 if __name__ == "__main__":
-    block_size, postfix_len = discover_block_size_and_postfix_length(enc)
+    block_size, postfix_len = find_block_size_and_postfix_length(enc)
     assert block_size == 16
 
     mode = detector(enc)
