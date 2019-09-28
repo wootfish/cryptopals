@@ -29,10 +29,14 @@ def crack_seed(output: int) -> int:
     for t in count(int(time()), -1):
         r.seed(t)
         if r.extract_number() == output:
-            return t
+            break
+
+    print()
+    return t
 
 
 if __name__ == "__main__":
+    print("Sleeping for up to 10 seconds...")
     value = rng_routine()
     print("RNG output:", value)
 

@@ -52,4 +52,4 @@ if __name__ == "__main__":
             assert r1.extract_number() == r2.extract_number()
         print(".", end="", flush=True)
 
-    print("Tests passed.")
+    print("\nTests passed.")

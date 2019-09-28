@@ -13,7 +13,7 @@ from challenge_09 import pkcs7
 ciphertext = b64decode("L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ==")
 
 
-def keystream(key: bytes, nonce: int = 0, quiet: bool = False) -> Generator[bytes, None, None]:
+def keystream(key: bytes, nonce: int = 0, quiet: bool = False) -> Generator[int, None, None]:
     cipher = AES.new(key, AES.MODE_ECB)
     count = 0
     cap = 2**64
@@ -32,4 +32,4 @@ aes_ctr_dec = aes_ctr_enc  # lol
 
 
 if __name__ == "__main__":
-    print(aes_ctr_dec(b'YELLOW SUBMARINE', ciphertext))
+    print("Plaintext:", aes_ctr_dec(b'YELLOW SUBMARINE', ciphertext))

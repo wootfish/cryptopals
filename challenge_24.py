@@ -11,7 +11,7 @@ from itertools import count
 
 """
 Phrasing on this one is sort of hard to interpret. Hope I got the idea right.
-The common theme seems to be low key entropy.
+The common theme seems to be exploiting low key entropy.
 """
 
 

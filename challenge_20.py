@@ -6,12 +6,12 @@ from challenge_18 import aes_ctr_enc
 from challenge_19 import guess_keystream
 
 
-key = urandom(16)
+_key = urandom(16)
 
 
 if __name__ == "__main__":
     with open("data/20.txt") as f:
-        ciphertexts = [aes_ctr_enc(key, b64decode(line)) for line in f]
+        ciphertexts = [aes_ctr_enc(_key, b64decode(line)) for line in f]
 
     ks_guess = guess_keystream(ciphertexts)
 
