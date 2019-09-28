@@ -3,7 +3,7 @@ import requests
 from random import random
 from time import sleep
 from hashlib import sha256
-from typing import Callable, Sequence, AnyStr
+from typing import Callable, Sequence, AnyStr, List
 from timeit import timeit
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
@@ -15,9 +15,9 @@ MAX_TRIES = 3
 
 
 def crack_hmac(url: AnyStr, fname: bytes):
-    def test(partial: bytes) -> None:
+    def test(partial: bytes) -> float:
         sig = partial.ljust(HMAC_HASH_SIZE, bytes([0]))
-        params = {'file': fname, 'signature': sig.hex()}
+        params = {'file': fname, 'signature': sig.hex().encode('ascii')}
 
         times = []
         for _ in range(11):
@@ -26,12 +26,12 @@ def crack_hmac(url: AnyStr, fname: bytes):
         return times[5]
 
 
-    sig = []
-    tmaxes = [0]
+    sig = []  # type: List[int]
+    tmaxes = [0]  # type: List[float]
     tries = 0
     while True:
         if len(sig) == HMAC_HASH_SIZE:
-            params = {'file': fname, 'signature': bytes(sig).hex()}
+            params = {'file': fname, 'signature': bytes(sig).hex().encode('ascii')}
             r = requests.get(url, params=params)
             if r.status_code == 200:
                 break
@@ -45,19 +45,12 @@ def crack_hmac(url: AnyStr, fname: bytes):
         print("Partial signature:", bytes(sig).hex())
         print()
 
-        async_results = []
         times = []
         for byte in range(256):
-            #f = lambda byte: (test(bytes(sig + [byte])), byte)
-            #result = pool.apply_async(f, (byte,))
-            #sleep(0.02 + 0.001 * len(sig))
-            #async_results.append(result)
-            #times.append(result.get())
             sleep(0.01)
             result = test(bytes(sig + [byte]))
             times.append((result, byte))
 
-        #times = [result.get() for result in async_results]
         times.sort()
 
         tmin = times[0][0]
@@ -122,7 +115,7 @@ if __name__ == "__main__":
     url = input("URL [{}]: ".format(URL)) or URL
     fname = input("Filename [{}]: ".format(FNAME)) or FNAME
 
-    sig = crack_hmac(url, fname)
+    sig = crack_hmac(url.encode("ascii"), fname.encode("ascii"))
 
     print()
     print()

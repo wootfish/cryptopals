@@ -8,22 +8,20 @@ from challenge_02 import bytes_xor
 from challenge_09 import pkcs7, strip_pkcs7
 
 
-key = urandom(16)
-#iv = urandom(16)
+_key = urandom(16)
 
 
 def wrap_userdata(data: bytes) -> bytes:
     data = data.translate(None, b';=')
     wrapped = b"comment1=cooking%20MCs;userdata=" + data + b";comment2=%20like%20a%20pound%20of%20bacon"
-    cipher = AES.new(key, AES.MODE_CBC, key)
+    cipher = AES.new(_key, AES.MODE_CBC, _key)
     return cipher.encrypt(pkcs7(wrapped))
 
 
 def check_pt_ascii(data: bytes) -> Optional[bytes]:
     # returns None if everything's ok
     # if anything outside the ASCII text range is found, returns the plaintext
-
-    cipher = AES.new(key, AES.MODE_CBC, key)
+    cipher = AES.new(_key, AES.MODE_CBC, _key)
     plaintext = cipher.decrypt(data)
     try:
         plaintext = strip_pkcs7(plaintext)
@@ -32,6 +30,7 @@ def check_pt_ascii(data: bytes) -> Optional[bytes]:
     for byte in plaintext:
         if byte not in printable.encode('ascii'):
             return plaintext
+    return None
 
 
 def crack():
@@ -44,5 +43,5 @@ def crack():
 
 
 if __name__ == "__main__":
-    print("Secret key:", key)
+    print("Secret key:", _key)
     print("Recovered:", crack())

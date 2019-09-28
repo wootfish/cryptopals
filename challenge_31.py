@@ -2,7 +2,7 @@ import requests
 
 from time import sleep
 from hashlib import sha256
-from typing import Callable, Sequence, AnyStr
+from typing import Callable, Sequence, AnyStr, List
 from timeit import timeit
 
 from multiprocessing.pool import ThreadPool
@@ -33,19 +33,19 @@ def hmac(key: bytes, message: bytes, h: Callable[[bytes], bytes] = do_sha256,
 
 
 def crack_hmac(url: AnyStr, fname: bytes):
-    def test(partial: bytes) -> None:
+    def test(partial: bytes) -> float:
         sig = partial.ljust(HMAC_HASH_SIZE, bytes([0]))
-        params = {'file': fname, 'signature': sig.hex()}
+        params = {'file': fname, 'signature': sig.hex().encode('ascii')}
         return timeit(lambda: requests.get(url, params=params), number=1)
 
-    pool = ThreadPool(256)
+    pool = ThreadPool(256)  # for making lots of concurrent GET requests
 
-    sig = []
-    tmaxes = [0]
+    sig = []  # type: List[int]
+    tmaxes = [0]  # type: List[float]
     tries = 0
     while True:
         if len(sig) == HMAC_HASH_SIZE:
-            params = {'file': fname, 'signature': bytes(sig).hex()}
+            params = {'file': fname, 'signature': bytes(sig).hex().encode('ascii')}
             r = requests.get(url, params=params)
             if r.status_code == 200:
                 break
@@ -87,7 +87,7 @@ def crack_hmac(url: AnyStr, fname: bytes):
         # this loop (excluding backtracks) so we might as well enforce that too
 
         dmax = tmax - tpen
-        drest = 0
+        drest = 0  # type: float
         for i in range(len(times) - 2):
             drest = max(drest, times[i+1][0] - times[i][0])
 
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     url = input("URL [{}]: ".format(URL)) or URL
     fname = input("Filename [{}]: ".format(FNAME)) or FNAME
 
-    sig = crack_hmac(url, fname)
+    sig = crack_hmac(url.encode("ascii"), fname.encode("ascii"))
 
     print()
     print()

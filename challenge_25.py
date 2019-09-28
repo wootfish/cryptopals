@@ -14,8 +14,8 @@ _key = urandom(16)
 def _edit(ciphertext: bytes, key: bytes, offset: int, newtext: bytes) -> bytes:
     """
     Returns the full ciphertext with the specified edit performed. This isn't
-    "optimized" to take advantage of CTR's random-access feature, because I
-    just figured, hey, it runs fast enough already.
+    "optimized" to take advantage of CTR's random-access feature because I just
+    figured, hey, it runs fast enough already.
     """
     start = offset
     end = start + len(newtext)

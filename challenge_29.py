@@ -3,6 +3,7 @@ import struct
 from random import choice
 from itertools import count
 from typing import Tuple, Callable
+from struct import pack, unpack
 
 from challenge_28 import sha1
 
@@ -37,9 +38,11 @@ def forge_mac(message: bytes, mac: bytes, suffix: bytes, oracle: Callable[[bytes
 
         if oracle(new_message, new_mac):
             print("done.")
-            return (new_message, new_mac)
+            break
 
         if i > len(_key): raise Exception("aw fuck")  # this indicates a bug
+
+    return (new_message, new_mac)
 
 
 message = b'comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon'

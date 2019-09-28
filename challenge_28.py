@@ -1,7 +1,7 @@
 # text vectors from wikipedia; implementation adapted from pseudocode from same
 
 import struct
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Sequence
 
 from challenge_08 import bytes_to_chunks
 
@@ -10,7 +10,7 @@ def leftrotate(word: int, steps: int = 1, length: int = 32) -> int:
     return ((word << steps) | (word >> (length - steps))) & ((1 << length) - 1)
 
 
-def sha1(message: bytes, state: Optional[Tuple[int]] = None,
+def sha1(message: bytes, state: Optional[Sequence[int]] = None,
         padding: Optional[bytes] = None, padding_offset: int = 0) -> bytes:
 
     # initialize algorithm state
@@ -19,22 +19,13 @@ def sha1(message: bytes, state: Optional[Tuple[int]] = None,
     ml = padding_offset + 8*len(message)  # message length, in bits
     pl = 511 - ((ml - 448) % 512)  # number of zero bits to pad with
 
-    #print(ml)
-
     message += b'\x80'
     message += b'\x00' * (pl//8)
     message += struct.pack(">Q", ml)
     assert len(message) % 64 == 0
     assert padding is None or message.endswith(padding)
 
-    ###
-    #h = message.hex()
-    #while h:
-    #    print(h[:8])
-    #    h = h[8:]
-    ###
-
-    chunks = bytes_to_chunks(message, 64)  # 512-bit chunks
+    chunks = bytes_to_chunks(message, 64)  # 512-bit blocks
     for chunk in chunks:
         # break chunk up into 16 32-bit words, then stretch those to 80 words
         words = bytes_to_chunks(chunk, 4)
@@ -103,3 +94,5 @@ if __name__ == "__main__":
     print(img3)
     assert vec3 == img3
     print()
+
+    print("Test vectors passed.")
