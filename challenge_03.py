@@ -1,6 +1,4 @@
 """
-Set 1, Challenge 3
-
 Note: There's a subtle reason why the get_candidate_score function below only
 counts lowercase letters. You might think you'd get better results from
 counting uppercase letters as well. However, there is a quirk of ASCII that we
@@ -33,8 +31,9 @@ chose the one that seemed simplest: ignoring uppercase completely.
 """
 
 
-from challenge_02 import bytes_xor
 from typing import Tuple
+
+from challenge_02 import bytes_xor
 
 
 # derived from http://practicalcryptography.com/media/cryptanalysis/files/english_monograms.txt
@@ -48,7 +47,7 @@ frequencies = {'a': 0.0855, 'b': 0.0160, 'c': 0.0316, 'd': 0.0387, 'e': 0.1209,
 
 def get_candidate_score(candidate: bytes) -> float:
     # lower scores are better
-    score = 0
+    score = 0  # type: float
     l = len(candidate)
 
     for letter, frequency in frequencies.items():
@@ -59,7 +58,7 @@ def get_candidate_score(candidate: bytes) -> float:
     return score
 
 
-def crack_xor_cipher(ciphertext: bytes) -> Tuple[float, bytes, bytes]:
+def crack_xor_cipher(ciphertext: bytes) -> Tuple[float, int, bytes]:
     best_score = float('inf')
     best_key = None
     best_plaintext = None
@@ -74,19 +73,13 @@ def crack_xor_cipher(ciphertext: bytes) -> Tuple[float, bytes, bytes]:
             best_key = candidate_key
             best_plaintext = candidate_plaintext
 
+    assert best_key is not None
+    assert best_plaintext is not None
     return (best_score, best_key, best_plaintext)
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python3 challenge_03.py hex")
-
-    try:
-        ciphertext = bytes.fromhex(sys.argv[1])
-    except ValueError:
-        sys.exit("Error. Hex input may be malformed. Please try again.")
-
+    ciphertext = bytes.fromhex("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
     score, key, text = crack_xor_cipher(ciphertext)
     print("Key:", key)
     print("Plaintext:", text)

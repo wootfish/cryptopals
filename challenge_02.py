@@ -3,6 +3,9 @@ Set 1, Challenge 2
 """
 
 
+from typing import List
+
+
 def _bytes_xor(a: bytes, b: bytes) -> bytes:
     return b''.join(
         bytes([byte_1 ^ byte_2])
@@ -20,15 +23,8 @@ def bytes_xor(*args: bytes, quiet=True) -> bytes:
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 3:
-        sys.exit("Usage: python3 challenge_02.py hex morehex")
-
-    try:
-        a = bytes.fromhex(sys.argv[1])
-        b = bytes.fromhex(sys.argv[2])
-    except ValueError:
-        sys.exit("Error. Hex input may be malformed. Please try again.")
-
+    a = bytes.fromhex("1c0111001f010100061a024b53535009181c")
+    b = bytes.fromhex("686974207468652062756c6c277320657965")
     result = bytes_xor(a, b)
-    print(result.hex())
+    assert result == bytes.fromhex("746865206b696420646f6e277420706c6179")
+    print(f"{a.hex()} XOR {b.hex()} == {result.hex()}")

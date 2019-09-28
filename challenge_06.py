@@ -38,7 +38,7 @@ weights = get_hamming_weights()
 
 MAX_KEYSIZE = 40
 def guess_keysize(ct: bytes, guesses: int = 1) -> List[Tuple[float, int]]:
-    def get_score(size: int) -> int:
+    def get_score(size: int) -> float:
         chunks = (ct[:size],
                   ct[size:2*size],
                   ct[2*size:3*size],

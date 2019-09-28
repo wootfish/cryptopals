@@ -1,5 +1,4 @@
-# depends on library pycrypto
-
+import base64
 
 from Crypto.Cipher import AES
 
@@ -10,13 +9,9 @@ def aes_ecb_decrypt(key: bytes, ciphertext: bytes) -> bytes:
 
 
 if __name__ == "__main__":
-    import sys
-    import base64
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python3 challenge_07.py filename")
-
-    with open(sys.argv[1]) as f:
+    with open("data/07.txt") as f:
         b64 = f.read()
+
     ciphertext = base64.b64decode(b64)
     plaintext = aes_ecb_decrypt(b'YELLOW SUBMARINE', ciphertext)
 

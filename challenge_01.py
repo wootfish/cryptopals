@@ -1,25 +1,16 @@
-"""
-Set 1, Challenge 1
-"""
-
-
 import base64
 
 
-def hex_to_b64(h: str) -> bytes:
+def hex_to_b64(h: str):
     return base64.b64encode(bytes.fromhex(h))
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python3 challenge_01.py hex")
+    hex_string = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
+    print("Before:", hex_string)
 
-    hex_bytes = sys.argv[1]
+    b64_string = hex_to_b64(hex_string).decode("ascii")  # since ascii is a superset of the b64 charset
+    print("After:", b64_string)
 
-    try:
-        b64 = hex_to_b64(hex_bytes)
-    except ValueError:
-        sys.exit("Error. Hex input may be malformed. Please try again.")
-
-    print(b64.decode("ascii"))  # since ascii is a superset of the b64 charset
+    assert b64_string == "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
+    print("Output string's validity check passed.")
