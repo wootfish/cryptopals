@@ -164,8 +164,6 @@ class M:
             self.a_key = self.b_key = sha1((1).to_bytes(192, 'big'))[:16]
         elif mode == MODE_ZERO:
             self.a_key = self.b_key = sha1(bytes(192))[:16]
-        #elif self.mode == MODE_NEG1:
-            #self.a_key = self.b_key = None
 
     def get_new_g(self) -> int:
         if self.mode == MODE_ONE:

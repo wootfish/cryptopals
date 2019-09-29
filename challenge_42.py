@@ -34,20 +34,14 @@ class RSA(RSA_39):
         m = self.enc(sig)
         em = m.to_bytes(k, 'big')
 
-        #print("checking prefix", em[:5])
         if not em.startswith(b'\x00\x01\xFF\xFF'): return False
-        #print("checking for end of padding")
         if b'\xFF\x00' not in em: return False
         em = em[em.index(b'\xFF\x00')+2:]   # skip over the bulk of the padding bytes without validating them
 
-        #print("checking for asn1 data")
         if not em.startswith(self.ASN1_SHA256): return False
         em = em[len(self.ASN1_SHA256):]
         em = em[:32]  # just the hash, not anything after
 
-        #print("checking hashes")
-        #print(sha256(message).digest())
-        #print(em)
         return em == sha256(message).digest()
 
 
