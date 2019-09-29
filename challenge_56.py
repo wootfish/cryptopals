@@ -22,7 +22,6 @@ def get_enc_oracle(chosen_message):
 
 def summarize(counter, size):
     top = sorted(((count, byte) for byte, count in enumerate(counter)), reverse=True)[:2]
-    #top = counter.most_common(2)
     probabilities = [(val, count / size) for count, val in top]
     return probabilities
 
@@ -41,7 +40,6 @@ def recover_bytes(offset, sample_size=2**26):
     zeroes = bytes(offset)
     oracle = get_enc_oracle(zeroes)
 
-    #print("-" * (sample_size // 0xFFFFF))
     for i in range(sample_size):
         if i & INTERVAL_SIZE == 0:
             print(end='.', flush=True)
@@ -54,10 +52,6 @@ def recover_bytes(offset, sample_size=2**26):
 
     while not (check(summary_1) and check(summary_2)):
         print(end=',', flush=True)
-        #print()
-        #check(summarize(ind_15, sample_size), quiet=False)
-        #check(summarize(ind_31, sample_size), quiet=False)
-        #print()
         for j in range(INTERVAL_SIZE):
             ct = oracle()
             ind_15[ct[15]] += 1
