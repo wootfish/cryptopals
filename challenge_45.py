@@ -11,9 +11,10 @@ if __name__ == "__main__":
     #sig = d.sign(message)
     #print("signature:", sig)
 
-    # ^ the above code actually hangs, because the _sign() function requests a
-    # new value of k whenever it notices r=0 or s=0 (which happens
-    # unconditionally when we set g=0)
+    # ^ the above code actually hangs, because my _sign() function was written
+    # to request a new value of k whenever it notices r=0 or s=0 (which is
+    # guaranteed to happen if we set g=0). If you temporarily disable this
+    # check then the attack code works perfectly.
 
     DSA.g = DSA.p + 1  # p+1 is congruent to 1 mod p, of course
     d = DSA()

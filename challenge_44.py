@@ -13,7 +13,7 @@ y = int("2d026f4bf30195ede3a088da85e398ef869611d0f68f07"
 target = "ca8f6f7c66fa362d40760d135b763eb8527d3d52"
 
 
-def recover_k(m1, m2, s1, s2):
+def recover_k(m1: int, m2: int, s1: int, s2: int) -> int:
     q = DSA.q
     denom = (m1 - m2) % q
     numer = (s1 - s2) % q
@@ -48,11 +48,12 @@ if __name__ == "__main__":
             except (InvModException, BadKError):
                 continue
             x_hex = hex(x1)[2:].encode("ascii")
-            assert sha1(x_hex).hexdigest() == target
             print("k reuse detected for messages", i, "and", j)
             print("k =", k)
             print("x =", x1)
-            print("sha1(x as hex) =", target)
+            print("sha1(hex(x)) =", sha1(x_hex).hexdigest())
+            assert sha1(x_hex).hexdigest() == target
+            print("Validity assertion passed.")
             break
         else:
             continue

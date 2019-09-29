@@ -1,7 +1,7 @@
 from hashlib import sha256
 from math import log, ceil
 
-from sympy import S, Rational
+from sympy import S, Rational  # type: ignore
 
 from challenge_39 import RSA as RSA_39
 
@@ -10,7 +10,7 @@ class RSA(RSA_39):
     ASN1_SHA256 = bytes.fromhex("3031300d060960864801650304020105000420")  # this hex is from https://tools.ietf.org/html/rfc3447#section-9.2
 
     def _EMSA_PKCS1_v1_5_SHA256(self, M: bytes) -> bytes:
-        k = ceil(log(self.n, 2**8))  # no reason to pass k in when we can just compute it here
+        k = ceil(log(self.n, 2**8))  # no need to pass k in, since we can just compute it here
         b = sha256(M).digest()
         b = b'\x00' + self.ASN1_SHA256 + b
         b = b.rjust(k-2, b'\xFF')
@@ -56,6 +56,8 @@ if __name__ == "__main__":
 
     print("Generating RSA keypair.")
     r = RSA()
+    print("Public key:", r.pubkey)
+    print()
 
     print("Testing signature primitives.")
     s = r.sign(b'what up')
@@ -63,6 +65,7 @@ if __name__ == "__main__":
     print("First signature check passed.")
     assert r.check_sig_broken(b'what up', s)
     print("Second signature check passed.")
+    print()
 
     orig = r._EMSA_PKCS1_v1_5_SHA256(message)
     end_len = 32 + len(r.ASN1_SHA256) + 2

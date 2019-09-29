@@ -1,8 +1,8 @@
 from base64 import b64decode
 
-from challenge_39 import RSA
-
 from math import ceil, log
+
+from challenge_39 import RSA
 
 
 rsa = RSA()
@@ -10,7 +10,7 @@ _pt = int.from_bytes(b64decode("VGhhdCdzIHdoeSBJIGZvdW5kIHlvdSBkb24ndCBwbGF5IGFy
 ct = rsa.enc(_pt)
 
 
-def oracle(ct: int):
+def oracle(ct: int) -> bool:
     """
     Returns True for even plaintexts, False for odd ones.
     """
@@ -29,8 +29,10 @@ if __name__ == "__main__":
     for i in range(ceil(log(n, 2))):
         mid = (lower + upper) // 2
 
-        print()
-        print(hex(upper))
+        if i & 0xFF == 0:
+            print("\nUpper bound:", hex(upper))
+        elif i & 1 == 0:
+            print(end='.', flush=True)
 
         ct_new = (coeff * ct_new) % n
 
@@ -39,15 +41,16 @@ if __name__ == "__main__":
         else:
             lower = mid
 
+    print()
     print("Oracle attack complete.")
     print("Repairing trailing bits...")
 
-    # for some reason the least significant byte never seems to be quite right.
+    # for some reason the least significant bytes never seem to be quite right.
     # my best guess is there's probably an off-by-one error in the search math.
-    # that's a pain to debug tho, and the margin of error seems to be less than
-    # 10 bits, so hey - let's just brute force the end of the message.
+    # that's a pain to debug tho, and the margin of error seems to be well less
+    # than 12 bits, so hey - let's just brute force the end of the message.
 
-    masked = upper ^ (upper & 0xFFF)  # zero the last 12 bits
+    masked = upper ^ (upper & 0xFFF)  # zero out the last 12 bits
 
     pt = None
     for i in range(2**12):

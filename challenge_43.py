@@ -1,6 +1,6 @@
 from random import SystemRandom
-
 from hashlib import sha1
+from typing import Optional, Tuple
 
 from challenge_39 import invmod
 
@@ -12,7 +12,7 @@ class BadKError(Exception): pass
 
 
 class DSA:
-    # provided parameters
+    # using parameters from problem statement
     p = int("800000000000000089e1855218a0e7dac38136ffafa72eda7"
             "859f2171e25e65eac698c1702578b07dc2a1076da241c76c6"
             "2d374d8389ea5aeffd3226a0530cc565f3bf6b50929139ebe"
@@ -37,7 +37,7 @@ class DSA:
             self._x = rng.randrange(1, self.q)
             self.y = pow(self.g, self._x, self.p)
 
-    def sign(self, message, k=None):
+    def sign(self, message: bytes, k: Optional[int] = None) -> Tuple[int, int]:
         if self._x is None:
             raise Exception("can't sign without private key")
 
@@ -51,7 +51,7 @@ class DSA:
         else:
             return self._sign(message, k)
 
-    def _sign(self, message, k):
+    def _sign(self, message: bytes, k: int) -> Tuple[int, int]:
         r = pow(self.g, k, self.p) % self.q
         if r == 0: raise BadKError()
         kinv = invmod(k, self.q)
@@ -60,7 +60,7 @@ class DSA:
         if s == 0: raise BadKError()
         return r, s
 
-    def verify(self, message, signature):
+    def verify(self, message: bytes, signature: Tuple[int, int]) -> bool:
         r, s = signature
         if not 0 < r < self.q or not 0 < s < self.q:
             print("signature params outside valid range")
@@ -73,7 +73,7 @@ class DSA:
         return v == r
 
 
-def recover_x(r, s, k, Hm):
+def recover_x(r: int, s: int, k: int, Hm: int) -> int:
     numerator = (s * k - Hm) % DSA.q
     return (numerator * invmod(r, DSA.q)) % DSA.q
 
