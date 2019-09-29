@@ -1,4 +1,5 @@
 from hashlib import sha1
+from typing import Dict, Any
 
 from challenge_39 import invmod, InvModException
 from challenge_43 import DSA, recover_x, BadKError
@@ -26,7 +27,7 @@ if __name__ == "__main__":
 
     msgs = []
     while lines:
-        msg = {}
+        msg = {}  # type: Dict[str, Any]
         msg['msg'] = lines.pop(0)[5:-1].encode("ascii")
         msg['s'] = int(lines.pop(0)[3:-1])
         msg['r'] = int(lines.pop(0)[3:-1])
