@@ -3,20 +3,24 @@ from challenge_43 import DSA
 
 
 if __name__ == "__main__":
-    #DSA.g = 0
-    #d = DSA()
+    DSA.g = 0
+    d = DSA()
 
-    #message = b'du, du hast, du hast mich'
-    #print("message:", message)
-    #sig = d.sign(message)
-    #print("signature:", sig)
+    message = b'du, du hast, du hast mich'
+    print("g=0 attack:")
+    print("message:", message)
+    sig = d.sign(message, ignore_bad_k=True)
+    print("signature:", sig)
+    assert d.verify(message, sig, disable_bounds_checks=True)
+    print("signature validity check passed")
 
-    # ^ the above code actually hangs, because my _sign() function was written
-    # to request a new value of k whenever it notices r=0 or s=0 (which is
-    # guaranteed to happen if we set g=0). If you temporarily disable this
-    # check then the attack code works perfectly.
+    for pt in (b'ich will', b'mein herz brennt'):
+        assert d.verify(pt, sig, disable_bounds_checks=True)
+        print("validity check for same signature with plaintext", pt, "passed")
 
-    DSA.g = DSA.p + 1  # p+1 is congruent to 1 mod p, of course
+    print("\n----\n")
+
+    DSA.g = DSA.p + 1  # this one relies on p+1 being congruent to 1 mod p
     d = DSA()
 
     z = 1
@@ -25,6 +29,7 @@ if __name__ == "__main__":
 
     sig = (r, s)
 
+    print("g=p+1 attack:")
     print("Magic signature:", sig)
     print("Testing signature verification.")
     for msg in (b'Hello, world', b'Goodbye, world'):
