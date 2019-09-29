@@ -37,7 +37,7 @@ class DSA:
             self._x = rng.randrange(1, self.q)
             self.y = pow(self.g, self._x, self.p)
 
-    def sign(self, message: bytes, k: Optional[int] = None) -> Tuple[int, int]:
+    def sign(self, message: bytes, k: Optional[int] = None, ignore_bad_k=False) -> Tuple[int, int]:
         if self._x is None:
             raise Exception("can't sign without private key")
 
@@ -45,26 +45,27 @@ class DSA:
             while True:
                 k = rng.randrange(1, self.q)
                 try:
-                    return self._sign(message, k)
+                    return self._sign(message, k, ignore_bad_k)
                 except BadKError:
                     pass
         else:
             return self._sign(message, k)
 
-    def _sign(self, message: bytes, k: int) -> Tuple[int, int]:
+    def _sign(self, message: bytes, k: int, ignore_bad_k=False) -> Tuple[int, int]:
         r = pow(self.g, k, self.p) % self.q
-        if r == 0: raise BadKError()
+        if r == 0 and not ignore_bad_k: raise BadKError()
         kinv = invmod(k, self.q)
         Hm = int(sha1(message).hexdigest(), base=16) % self.q
         s = (kinv * (Hm + self._x * r)) % self.q
-        if s == 0: raise BadKError()
+        if s == 0 and not ignore_bad_k: raise BadKError()
         return r, s
 
-    def verify(self, message: bytes, signature: Tuple[int, int]) -> bool:
+    def verify(self, message: bytes, signature: Tuple[int, int], disable_bounds_checks=False) -> bool:
         r, s = signature
         if not 0 < r < self.q or not 0 < s < self.q:
-            print("signature params outside valid range")
-            return False
+            if not disable_bounds_checks:
+                print("signature params outside valid range")
+                return False
         w = invmod(s, self.q)
         Hm = int(sha1(message).hexdigest(), base=16) % self.q
         u1 = (Hm * w) % self.q
