@@ -296,7 +296,7 @@ if __name__ == "__main__":
     #    check_constraints(collision[0])  # raises exception on failure
     #    assert massage(collision[0]) == collision[0]  # shouldn't need to correct any constraints
 
-    check_constraints(massage(bytes(64)), quiet=False)
+    check_constraints(massage(bytes(64)))
     print("Basic tests passed.")
 
     print(datetime.now())
