@@ -1,7 +1,6 @@
 from challenge_21 import MT19937
 
 from os import urandom
-from typing import Generator
 
 
 def untemper(y: int) -> int:

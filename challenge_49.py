@@ -1,4 +1,5 @@
 from os import urandom
+from typing import Tuple
 
 from Crypto.Cipher import AES
 
@@ -14,14 +15,14 @@ BOB_ID = 2
 MALLORY_ID = 3
 
 
-def cbc_mac(message, iv, key, pad=True):
+def cbc_mac(message: bytes, iv: bytes, key: bytes, pad=True) -> bytes:
     cipher = AES.new(key, AES.MODE_CBC, iv)
     if pad: message = pkcs7(message)
     return cipher.encrypt(message)[-16:]
 
 
 _K = urandom(16)
-def api_query_1(message, iv, mac):
+def api_query_1(message: bytes, iv: bytes, mac: bytes):
     if cbc_mac(message, iv, _K) != mac:
         raise BadMacError
     print("MAC validated.")
@@ -34,7 +35,7 @@ def api_query_1(message, iv, mac):
     print(f"Transaction processed: {amt} from user {src} to user {dst}")
 
 
-def api_query_2(message, mac):
+def api_query_2(message: bytes, mac: bytes):
     if cbc_mac(message, b'\x00'*16, _K) != mac:
         raise BadMacError
     print("MAC validated.")
@@ -48,20 +49,20 @@ def api_query_2(message, mac):
         print(f"Transaction processed: {amt} from user {src} to user {dst}")
 
 
-def make_txn_1(src, dst, amt):
+def make_txn_1(src: int, dst: int, amt: int) -> Tuple[bytes, bytes, bytes]:
     message = f"from={src}&to={dst}&amount={amt}".encode()
     iv = urandom(16)
     mac = cbc_mac(message, iv, _K)
     return message, iv, mac
 
 
-def make_txn_2(src, dst, amt):
+def make_txn_2(src: int, dst: int, amt: int) -> Tuple[bytes, bytes]:
     message = f"from={src}&tx_list={dst}:{amt}".encode()
     mac = cbc_mac(message, b'\x00'*16, _K)
     return message, mac
 
 
-def chosen_iv_attack(msg, iv, mac):
+def chosen_iv_attack(msg: bytes, iv: bytes, mac: bytes) -> Tuple[bytes, bytes, bytes]:
     offset = len(f"from={ALICE_ID}&to=")
     delta = bytes([0]*offset + [ord(str(BOB_ID)) ^ ord(str(MALLORY_ID))])
     new_iv = bytes_xor(iv, delta.ljust(16, b'\x00'))
@@ -69,7 +70,7 @@ def chosen_iv_attack(msg, iv, mac):
     return new_msg, new_iv, mac
 
 
-def length_extension_attack(msg, mac):
+def length_extension_attack(msg: bytes, mac: bytes) -> Tuple[bytes, bytes]:
     # note that this attack requires the ability to generate a tag for a
     # carefully constructed second message
     padded = pkcs7(msg)
@@ -82,16 +83,16 @@ def length_extension_attack(msg, mac):
 if __name__ == "__main__":
     print("==== Chosen-IV attack")
     print("[*] Alice (user 1) sending $1M to Bob (user 2).")
-    txn = make_txn_1(ALICE_ID, BOB_ID, 10**6)
-    api_query_1(*txn)
+    txn_1 = make_txn_1(ALICE_ID, BOB_ID, 10**6)
+    api_query_1(*txn_1)
 
     print("\n[*] Mallory (user 3) forging $1M transfer to herself from Alice.")  # hey, nice, this attack passes the Bechdel test
-    api_query_1(*chosen_iv_attack(*txn))
+    api_query_1(*chosen_iv_attack(*txn_1))
 
     print("\n\n==== Length-extension attack")
     print("[*] Alice sending $34 to Bob.")
-    txn = make_txn_2(ALICE_ID, BOB_ID, 34)
-    api_query_2(*txn)
+    txn_2 = make_txn_2(ALICE_ID, BOB_ID, 34)
+    api_query_2(*txn_2)
 
     print("\n[*] Mallory appending a $1M transfer to herself.")
-    api_query_2(*length_extension_attack(*txn))
+    api_query_2(*length_extension_attack(*txn_2))

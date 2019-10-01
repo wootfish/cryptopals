@@ -1,12 +1,9 @@
-from challenge_02 import bytes_xor
 from challenge_21 import MT19937
-#from challenge_23 import untemper
 
 from os import urandom
 from math import ceil
 from time import time
 from typing import Optional
-from itertools import count
 
 
 """
@@ -27,7 +24,7 @@ def mt_cipher(key: int, plaintext: bytes, r: Optional[MT19937] = None) -> bytes:
     keystream = [r.extract_number() for _ in range(ceil(len(plaintext)/4))]
     for i, ch in enumerate(plaintext):
         ks_n = keystream[i//4]
-        ks_b = (ks_n >> 4*(i%4)) & 0xFF
+        ks_b = (ks_n >> 4 * (i % 4)) & 0xFF
         ciphertext += bytes([ks_b ^ ch])
 
     return ciphertext
@@ -62,7 +59,7 @@ if __name__ == "__main__":
     # a 16 bit key is absolutely tiny. might as well just use exhaustive search
     r = MT19937()
     for b in range(2**16):
-        if (b%1024 == 0): print(".", end="", flush=True)
+        if (b % 1024 == 0): print(".", end="", flush=True)
         candidate = mt_cipher(b, ciphertext, r)
         if message in candidate:
             print("found key", b)

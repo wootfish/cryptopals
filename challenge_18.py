@@ -5,10 +5,6 @@ from base64 import b64decode
 
 from Crypto.Cipher import AES
 
-from challenge_02 import bytes_xor
-from challenge_08 import bytes_to_chunks
-from challenge_09 import pkcs7
-
 
 ciphertext = b64decode("L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ==")
 

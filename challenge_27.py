@@ -5,7 +5,7 @@ from string import printable
 from Crypto.Cipher import AES
 
 from challenge_02 import bytes_xor
-from challenge_09 import pkcs7, strip_pkcs7
+from challenge_09 import pkcs7, strip_pkcs7, PaddingError
 
 
 _key = urandom(16)
@@ -25,7 +25,7 @@ def check_pt_ascii(data: bytes) -> Optional[bytes]:
     plaintext = cipher.decrypt(data)
     try:
         plaintext = strip_pkcs7(plaintext)
-    except:
+    except PaddingError:
         return plaintext
     for byte in plaintext:
         if byte not in printable.encode('ascii'):

@@ -67,6 +67,5 @@ if __name__ == "__main__":
         # uncomment this line to watch the decryption character-by-character:
         #print(plaintext)
 
-
     print("Plaintext:\n")
     print(plaintext.decode("ascii"))

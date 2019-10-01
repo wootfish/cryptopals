@@ -1,5 +1,4 @@
 from typing import List
-from itertools import count
 
 
 def bytes_to_chunks(b: bytes, chunk_size: int) -> List[bytes]:

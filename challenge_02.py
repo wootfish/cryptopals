@@ -3,9 +3,6 @@ Set 1, Challenge 2
 """
 
 
-from typing import List
-
-
 def _bytes_xor(a: bytes, b: bytes) -> bytes:
     return b''.join(
         bytes([byte_1 ^ byte_2])

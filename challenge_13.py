@@ -1,7 +1,7 @@
 from Crypto.Cipher import AES
 
 from os import urandom
-from typing import Dict, Union, Tuple, Sequence
+from typing import Dict, Tuple, Sequence
 
 from challenge_09 import pkcs7, strip_pkcs7
 

@@ -62,7 +62,7 @@ if __name__ == "__main__":
     prefix_junk_blocks_len = prefix_length + prefix_len_to_add
 
     print("Prepending", prefix_len_to_add, "bytes to produce",
-            prefix_junk_blocks_len, "total bytes of leading garbage")
+          prefix_junk_blocks_len, "total bytes of leading garbage")
 
     # copied over directly from challenge_12
     # (only modifications: mixing in prefix_* variables in a few places)

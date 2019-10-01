@@ -22,7 +22,7 @@ def guess_keystream(ciphertexts: List[bytes]) -> bytes:
     byte_vals = []
     for i in range(keystream_len):
         # i'th byte of each ciphertext long enough to have such a byte:
-        ct_bytes = b''.join(bytes([text[i]]) for text in ciphertexts if i<len(text))
+        ct_bytes = b''.join(bytes([text[i]]) for text in ciphertexts if i < len(text))
         concat_len = len(ct_bytes)
 
         best_score = float('inf')

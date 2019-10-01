@@ -3,7 +3,6 @@ import struct
 from random import choice
 from itertools import count
 from typing import Tuple, Callable
-from struct import pack, unpack
 
 from challenge_28 import sha1
 

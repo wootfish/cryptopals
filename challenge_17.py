@@ -10,8 +10,8 @@ from challenge_08 import bytes_to_chunks
 from challenge_09 import pkcs7, strip_pkcs7, PaddingError
 
 
-_key = b'\xAA' * 16 #urandom(16)
-iv = b'\xBB' * 16 #urandom(16)  # known to the attacker
+_key = urandom(16)
+iv = urandom(16)
 
 
 strings = [
@@ -44,7 +44,7 @@ def padding_oracle(ciphertext: bytes, iv: bytes) -> bool:
     plaintext = _dec(ciphertext, iv)
     try:
         strip_pkcs7(plaintext)
-    except:
+    except PaddingError:
         return False
     return True
 
@@ -85,7 +85,7 @@ def cbc_oracle_attack(ciphertext: bytes) -> bytes:
 
 
 if __name__ == "__main__":
-    print("Decrypting ciphertexts in order (rather than selecting at random):")
+    print("Decrypting ciphertexts in order:")
     print()
 
     for i in range(len(strings)):

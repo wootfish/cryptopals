@@ -1,12 +1,9 @@
 import requests
 
-from random import random
 from time import sleep
-from hashlib import sha256
-from typing import Callable, Sequence, AnyStr, List
+from typing import AnyStr, List
 from timeit import timeit
 from datetime import datetime
-from multiprocessing.pool import ThreadPool
 
 from challenge_31 import HMAC_HASH_SIZE
 

@@ -1,6 +1,6 @@
 from random import randrange
 from os import urandom
-from typing import Tuple, Any
+from typing import Tuple
 
 from Crypto.Cipher import AES
 
@@ -135,6 +135,7 @@ class M:
     def spy_on_message(self, message: Tuple[bytes, bytes]):
         iv, ct = message
         pt = _dec(self.key, iv, ct)
+        print("[M] Intercepted", pt)
         return message
 
 

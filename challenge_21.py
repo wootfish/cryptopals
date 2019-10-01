@@ -1,9 +1,6 @@
-import random
-
-
 # NOTE: I believe this to be a faithful implementation of the Wikipedia
-# pseudocode for the Twister; however, I have yet to find any test vectors
-# which match its output.
+# pseudocode for the Mersenne Twister; that said, I have yet to find any test
+# vectors which match its output.
 
 
 class MersenneError(Exception): pass
@@ -56,11 +53,11 @@ class MT19937:
 
     def twist(self) -> None:
         for i in range(self.n):
-            x = (self.state[i] & self.upper_mask) + (self.state[(i+1)%self.n] & self.lower_mask)
+            x = (self.state[i] & self.upper_mask) + (self.state[(i+1) % self.n] & self.lower_mask)
             xA = x >> 1
             if x & 1:
                 xA ^= self.a
-            self.state[i] = self.state[(i+1)%self.n] ^ xA
+            self.state[i] = self.state[(i+1) % self.n] ^ xA
         self.index = 0
 
 

@@ -1,11 +1,9 @@
-from challenge_39 import RSA, invmod
+from challenge_39 import RSA
 from challenge_47 import pkcs1, intersect, RANGES
 
 from itertools import count
 from typing import Optional
-from random import randrange
-from math import floor, ceil
-from os import urandom
+from math import ceil
 
 
 if __name__ == "__main__":

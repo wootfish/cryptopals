@@ -2,7 +2,7 @@ import requests
 
 from time import sleep
 from hashlib import sha256
-from typing import Callable, Sequence, AnyStr, List
+from typing import Callable, AnyStr, List
 from timeit import timeit
 
 from multiprocessing.pool import ThreadPool
@@ -19,7 +19,7 @@ def do_sha256(preimage: bytes) -> bytes:
 
 
 def hmac(key: bytes, message: bytes, h: Callable[[bytes], bytes] = do_sha256,
-        h_size: int = HMAC_HASH_SIZE) -> bytes:
+         h_size: int = HMAC_HASH_SIZE) -> bytes:
 
     if len(key) > h_size:
         key = h(key)
@@ -60,8 +60,9 @@ def crack_hmac(url: AnyStr, fname: bytes):
 
         async_results = []
         for byte in range(256):
-            f = lambda byte: (test(bytes(sig + [byte])), byte)
-            result = pool.apply_async(f, (byte,))
+            result = pool.apply_async(
+                    lambda byte: (test(bytes(sig + [byte])), byte),
+                    (byte,))
             sleep(0.02 + 0.0017 * len(sig))
             async_results.append(result)
 

@@ -43,7 +43,7 @@ def guess_keysize(ct: bytes, guesses: int = 1) -> List[Tuple[float, int]]:
                   ct[size:2*size],
                   ct[2*size:3*size],
                   ct[3*size:4*size])
-        avg = sum(hamming_distance(a,b) for a,b in combinations(chunks, 2)) / 12
+        avg = sum(hamming_distance(a, b) for a, b in combinations(chunks, 2)) / 12
         return avg / size
 
     scores = [(get_score(size), size) for size in range(1, MAX_KEYSIZE+1)]

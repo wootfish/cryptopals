@@ -1,10 +1,9 @@
 from itertools import count
-from random import randrange
-from typing import List, Tuple, Callable, Optional
-from math import floor, ceil
+from typing import List, Tuple, Optional
+from math import ceil
 from os import urandom
 
-from challenge_39 import RSA, invmod
+from challenge_39 import RSA
 
 
 # ref: http://archiv.infsec.ethz.ch/education/fs08/secsem/Bleichenbacher98.pdf
@@ -28,7 +27,7 @@ def intersect(r1: RANGES, r2: RANGES) -> RANGES:
         if b < d: i += 1
         else: j += 1
         if b >= c and d >= a:
-            seq = sorted((a,b,c,d))
+            seq = sorted((a, b, c, d))
             result.append((seq[1], seq[2]))
     for ri in range(len(result)-1):         # merge adjacent ranges
         if 0 <= result[ri+1][0] - result[ri][1] <= 1:

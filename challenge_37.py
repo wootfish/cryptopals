@@ -1,7 +1,7 @@
 from hashlib import sha256
 
 from challenge_31 import hmac
-from challenge_36 import Client, Server, I, P, N
+from challenge_36 import Client, Server, I, N
 
 
 # simulating the network interaction, like with challenge 34 et al

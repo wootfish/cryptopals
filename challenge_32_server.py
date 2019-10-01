@@ -4,7 +4,6 @@
 
 from time import sleep
 from os import urandom
-from urllib.parse import unquote
 
 from flask import Flask, request, abort
 

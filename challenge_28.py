@@ -1,7 +1,7 @@
 # text vectors from wikipedia; implementation adapted from pseudocode from same
 
 import struct
-from typing import Optional, Tuple, Sequence
+from typing import Optional, Sequence
 
 from challenge_08 import bytes_to_chunks
 
@@ -11,7 +11,7 @@ def leftrotate(word: int, steps: int = 1, length: int = 32) -> int:
 
 
 def sha1(message: bytes, state: Optional[Sequence[int]] = None,
-        padding: Optional[bytes] = None, padding_offset: int = 0) -> bytes:
+         padding: Optional[bytes] = None, padding_offset: int = 0) -> bytes:
 
     # initialize algorithm state
     h0, h1, h2, h3, h4 = state or (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
@@ -86,7 +86,6 @@ if __name__ == "__main__":
     print(img2)
     assert vec2 == img2
     print()
-
 
     vec3 = sha1(b'Deltron'*3030).hex()
     img3 = 'a91ca9b66f121630b20e13f44236e5cdc0abe138'

@@ -1,7 +1,5 @@
 import base64
 
-from Crypto.Cipher import AES
-
 from challenge_02 import bytes_xor
 from challenge_07 import aes_ecb_decrypt
 from challenge_08 import bytes_to_chunks
