@@ -2,9 +2,9 @@
 
 These are my solutions to the Cryptopals Challenges. They are written in Python 3.
 
-I've had so much fun over the last few months working through these that I can't resist sharing my results. I've tried to make them as readable as possible.
+I've had so much fun working through these over the last few months that I can't resist sharing my results. I've tried to make them as readable as possible.
 
-That said, if you're working through these yourself, try to resist looking at other people's work too much - you learn more when you figure things out for yourself :)
+That said, if you're working through these yourself, try to resist looking at other people's work too much - you learn more when you figure things out for yourself!
 
 If you're interested in this stuff, feel free to hit me up [on Twitter](https://twitter.com/elisohl) or [elsewhere](https://eli.sohl.com/contact).
 
