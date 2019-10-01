@@ -4,8 +4,8 @@ from challenge_02 import bytes_xor
 from challenge_09 import pkcs7
 from challenge_49 import cbc_mac
 
-from string import digits, ascii_letters, punctuation  # can't just import printable because that includes newlines
-from itertools import combinations_with_replacement
+from string import digits, ascii_letters, punctuation  # can't just use printable because that includes newlines
+from itertools import product
 
 
 valid_chars = bytes(ord(ch) for ch in digits+ascii_letters+punctuation+' \t')
@@ -42,18 +42,18 @@ if __name__ == "__main__":
     result = None
 
     # now let's search for a good ciphertext block
-    for i, comb in enumerate(combinations_with_replacement(valid_chars, 16)):
+    for i, glue in enumerate(product(valid_chars, repeat=16)):
         if i % 100000 == 0: print(end='.', flush=True)
-        comb = bytes(comb)
+        glue_bytes = bytes(glue)
 
         # get the intermediate MAC value after this plaintext block
-        ct_block = cbc_mac(sub_padded + comb, iv, key, pad=False)
+        ct_block = cbc_mac(sub_padded + glue_bytes, iv, key, pad=False)
 
         pt_block = bytes_xor(ct_block, P)
         if False in [byte in valid_chars for byte in pt_block]:
             continue
 
-        result = sub_padded + comb + pt_block
+        result = sub_padded + glue_bytes + pt_block
         break
 
     print()
