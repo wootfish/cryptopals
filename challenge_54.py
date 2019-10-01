@@ -1,7 +1,8 @@
-from challenge_52 import C, MD, MD_PAD, H_SIZE, M_BLOCK_SIZE
-
 from os import urandom
 from itertools import product
+from typing import Generator, List, Tuple, Set
+
+from challenge_52 import C, MD, MD_PAD, H_SIZE, M_BLOCK_SIZE
 
 
 k = 6
@@ -13,14 +14,14 @@ predictions = [
         ]
 
 
-def all_blocks(block_size=M_BLOCK_SIZE):
+def all_blocks(block_size=M_BLOCK_SIZE) -> Generator[bytes, None, None]:
     # how has it taken me this long to think of writing this helper?!
     for b in product(range(256), repeat=block_size):
         yield bytes(b)
 
 
-def get_initial_states(k=k):
-    states = set()
+def get_initial_states(k=k) -> List[bytes]:
+    states = set()  # type: Set[bytes]
     for _ in range(2**k):
         s = urandom(H_SIZE)
         while s in states:
@@ -29,14 +30,14 @@ def get_initial_states(k=k):
     return list(states)
 
 
-def get_hash(H, M_len):
+def get_hash(H: bytes, M_len: int) -> bytes:
     assert M_len % M_BLOCK_SIZE == 0  # keep things from getting messy
     dummy = b' ' * (M_len + M_BLOCK_SIZE*(k+1))  # +1 b/c of the glue block
     padding = MD_PAD(dummy)[len(dummy):]
     return MD(padding, H=H, pad=False)
 
 
-def find_collision(H_1, H_2):
+def find_collision(H_1: bytes, H_2: bytes) -> Tuple[bytes, bytes]:
     for M in all_blocks():
         C_1 = C(M, H_1)
         C_2 = C(M, H_2)

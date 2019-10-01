@@ -19,7 +19,7 @@ Content-Length: {len(P)}
 {P}""".encode('ascii')
 
 
-def oracle(P, stream=True):
+def oracle(P: str, stream=True) -> int:
     request = _format_request(P)
     compressed = compress(request)
     mode = AES.MODE_CFB if stream else AES.MODE_CBC
@@ -28,7 +28,7 @@ def oracle(P, stream=True):
     return len(ciphertext)
 
 
-def attack_cfb_mode():
+def attack_cfb_mode() -> str:
     prefix = "Cookie: sessionid="
     recovered = ""
     while not recovered.endswith("="):
@@ -40,7 +40,7 @@ def attack_cfb_mode():
     return recovered
 
 
-def attack_cbc_mode():
+def attack_cbc_mode() -> str:
     # prefix abcde to pad us out to the block size
     prefix = "abcdeCookie: sessionid="
     recovered = ""
@@ -62,7 +62,6 @@ if __name__ == "__main__":
     print("sessionid (recovered):", sessionid)
     assert sessionid == _sessionid
     print("Equality assertion passed.\n")
-
 
     print("[*] Recovering sessionid (cipher: AES-CBC)")
     sessionid = attack_cbc_mode()

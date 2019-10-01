@@ -1,9 +1,9 @@
+from itertools import count, product
+from typing import Dict
+
 from Crypto.Cipher import AES
 
 from challenge_08 import bytes_to_chunks
-from challenge_09 import pkcs7
-
-from itertools import count, product
 
 
 PAD_LEN_FIELD_SIZE = 64  # same as sha1 (unlike all other params here lol)
@@ -16,13 +16,13 @@ AES_KEY_PADDING = b'\x00'*(16-H_SIZE)
 AES_BLOCK_PADDING = b'\x00'*(16-M_BLOCK_SIZE)
 
 
-def C(M_i, H):
+def C(M_i: bytes, H: bytes) -> bytes:
     # assumptions: len(M_i) == M_BLOCK_SIZE, len(H) == H_SIZE
     cipher = AES.new(H+AES_KEY_PADDING, AES.MODE_ECB)
     return cipher.encrypt(M_i+AES_BLOCK_PADDING)[:H_SIZE]
 
 
-def MD_PAD(msg):
+def MD_PAD(msg: bytes) -> bytes:
     l = len(msg) % 2**PAD_LEN_FIELD_SIZE
     len_field = l.to_bytes(PAD_LEN_FIELD_SIZE, 'big')
     zeroes_needed = -(len(msg) + 1 + PAD_LEN_FIELD_SIZE) % M_BLOCK_SIZE
@@ -30,7 +30,7 @@ def MD_PAD(msg):
     return padded
 
 
-def MD(M, H=H_INITIAL, C=C, pad=True):
+def MD(M: bytes, H=H_INITIAL, C=C, pad=True) -> bytes:
     if pad:
         M = MD_PAD(M)
     assert len(M) % M_BLOCK_SIZE == 0
@@ -47,9 +47,8 @@ if __name__ == "__main__":
     colliding_blocks = []
     H = H_INITIAL
     for i in count(1):
-        outputs = {}
+        outputs = {}  # type: Dict[bytes, bytes]
         for j, candidate in enumerate(product(range(256), repeat=M_BLOCK_SIZE)):
-            #if j % 10000 == 0: print(end=".", flush=True)
             m1 = bytes(candidate)
             out = C(m1, H)
             if out in outputs:
@@ -61,9 +60,9 @@ if __name__ == "__main__":
         else:
             raise Exception("no collisions found?!")  # should be impossible, per pigeonhole principle
 
-        for j, comb in enumerate(product((0, 1), repeat=i)):
-            preimage = b''.join(colliding_blocks[j][comb[j]] for j in range(i))
-            print(f"({j}/{2**i}) MD(bytes.fromhex('{preimage.hex()}')) = {MD(preimage)}")
-
-        print("Total collisions:", 2**i)
-        print()
+        expected = MD(b''.join(colliding_blocks[j][0] for j in range(i)))
+        for j, prod in enumerate(product((0, 1), repeat=i)):
+            preimage = b''.join(colliding_blocks[j][prod[j]] for j in range(i))
+            image = MD(preimage)
+            assert image == expected
+            print(f"({j}/{2**i}) MD(bytes.fromhex('{preimage.hex()}')) = {image}")

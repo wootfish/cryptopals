@@ -1,16 +1,18 @@
+from itertools import product, islice
+from typing import Tuple, Sequence
+
 from challenge_08 import bytes_to_chunks
 from challenge_09 import pkcs7
 from challenge_52 import C, MD, H_INITIAL, M_BLOCK_SIZE
-
-from itertools import product, islice
-
-from os import urandom
 
 
 # reference: https://www.schneier.com/academic/paperfiles/paper-preimages.pdf
 
 
-def make_vocal_track():
+EXPANDABLE_MSG = Sequence[Tuple[bytes, bytes]]
+
+
+def make_vocal_track() -> bytes:
     vocal_loop = 'around the world'  # len = 16 chars
     vocal_track = ''
     for t in product((False, True), repeat=16):
@@ -23,16 +25,15 @@ vocal_track = make_vocal_track()
 assert 2**k == len(vocal_track)
 
 #vocal_track = b'around the world'*2**16
-
 # ^ Uncomment if you want to see how the attack handles a more repetitive
-# input. The main difference is the bridge search has to work harder, because
-# the message gets the intermediate H values stuck in a cycle of length 589 --
+# input. The main difference is the bridge block search takes longer, because
+# the message's intermediate H values get stuck in a cycle of length 589 --
 # much fewer than the 64637 H values seen when processing the default message.
+
 
 DUMMY_BLOCK = b'\xAA' * M_BLOCK_SIZE
 
-
-def long_message_attack():
+def long_message_attack() -> bytes:
     print("\n[*] Making expandable message.")
     C, H_exp = make_expandable_message()
 
@@ -47,7 +48,7 @@ def long_message_attack():
     return second_preimage
 
 
-def make_expandable_message():
+def make_expandable_message() -> Tuple[EXPANDABLE_MSG, bytes]:
     H = H_INITIAL
     blocks = []
 
@@ -56,11 +57,11 @@ def make_expandable_message():
         m_0, m_1, H = find_collision(2**i + 1, H)
         #print()
         blocks.append((m_0, m_1))
-    print()
+
     return blocks, H
 
 
-def find_collision(big_size, H):
+def find_collision(big_size: int, H: bytes) -> Tuple[bytes, bytes, bytes]:
     #print("Finding collision pair for message sizes 1,", big_size)
     #print("Generating intermediate state for long messages...", end='', flush=True)
     H_penult = hash_dummy_blocks(H, big_size-1)
@@ -81,10 +82,10 @@ def find_collision(big_size, H):
             # store these values lets us reconstruct init_blocks as needed
             return short_messages[H_next], M, H_next
 
-    raise Exception("no collision found :(")  # should be impossible, per pigeonhole
+    raise Exception("no collision found :(")  # should be impossible, per pigeonhole principle
 
 
-def hash_dummy_blocks(H, num_blocks):
+def hash_dummy_blocks(H: bytes, num_blocks: int) -> bytes:
     for i in range(num_blocks):
         if i & 0xFFFF == 0:
             print(end='.', flush=True)
@@ -92,7 +93,7 @@ def hash_dummy_blocks(H, num_blocks):
     return H
 
 
-def find_link(H_exp):
+def find_link(H_exp: bytes) -> Tuple[bytes, int]:
     # break down our repeating string to the message block size
     blocks = bytes_to_chunks(vocal_track, M_BLOCK_SIZE)
     len_blocks = len(blocks)
@@ -101,7 +102,7 @@ def find_link(H_exp):
     H = H_INITIAL
     message_states = []
     for i in range(2**k):
-        H = C(blocks[i%len_blocks], H)
+        H = C(blocks[i % len_blocks], H)
         message_states.append(H)
 
     # search through possible link blocks until we find one that works
@@ -117,7 +118,7 @@ def find_link(H_exp):
     raise Exception("No link block found :(")
 
 
-def produce_message(C, L):
+def produce_message(C: EXPANDABLE_MSG, L: int) -> bytes:
     assert k <= L <= 2**k + k - 1
     T = L - k
     S = bin(T)[:1:-1].ljust(k, '0')
@@ -143,6 +144,6 @@ if __name__ == "__main__":
     assert hash_1 == hash_2
 
     print(f"\n[*] Attack complete. len(second_preimage) = {len(second_preimage)}")
-    print(f"MD({vocal_track[:32]}...{vocal_track[-32:]}) = {hash_1}")
-    print(f"MD({second_preimage[:32]}...{second_preimage[-32:]}) = {hash_2}")
+    print(f"\nMD({vocal_track[:80]}...{vocal_track[-40:]}) = {hash_1}")
+    print(f"\nMD({second_preimage[:25]}...{second_preimage[-40:]}) = {hash_2}")
     print()

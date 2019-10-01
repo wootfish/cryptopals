@@ -1,10 +1,9 @@
 import struct
 import random
 
-from itertools import count, product
+from itertools import count
 from datetime import datetime
 
-from challenge_02 import bytes_xor
 from challenge_08 import bytes_to_chunks
 from challenge_28 import leftrotate
 from challenge_30 import F, G, r1, r2
@@ -15,7 +14,7 @@ from Crypto.Hash import MD4  # way faster than native version from challenge 30
 MODULUS = 1 << 32
 
 
-def md4(msg):
+def md4(msg: bytes) -> bytes:
     return MD4.new(msg).digest()
 
 
@@ -33,14 +32,14 @@ class Constraint:
         self.inds = inds
 
     @staticmethod
-    def test(ind, word):
+    def test(ind: int, word_1: int, word_2: int) -> bool:
         raise NotImplementedError
 
     @staticmethod
-    def ensure(self, ind, word_1, word_2):
+    def ensure(ind: int, word_1: int, word_2: int) -> int:
         raise NotImplementedError
 
-    def check(self, word_1, word_2, quiet=True):
+    def check(self, word_1: int, word_2: int, quiet=True):
         for ind in self.inds:
             if self.test(ind, word_1, word_2):
                 if not quiet: print("Check passed:", self.success_message.format(ind))
@@ -48,7 +47,7 @@ class Constraint:
                 if not quiet: print("Check failed:", self.failure_message.format(ind))
                 raise ConstraintViolatedError
 
-    def massage(self, word_1, word_2):
+    def massage(self, word_1: int, word_2: int) -> int:
         for ind in self.inds:
             word_1 = self.ensure(ind, word_1, word_2)
         return word_1
@@ -180,6 +179,7 @@ def massage(message, quiet=True):
     # enforce round 1 conditions (these are easy to do in bulk)
 
     state_log = [a, d, c, b]  # keep a record of all intermediate states (needed for round 2 message corrections)
+
     def f(a, b, c, d, k, s, X):
         # serves as normal round function, but also adjusts X as it goes
         a_new = r1(a, b, c, d, k, s, X)
@@ -204,7 +204,7 @@ def massage(message, quiet=True):
 
     # enforce round 2 constraints
 
-    # these are a bit fussier than round 1 constraints so only the ones that
+    # these are a bit fussier than round 1 constraints, so only the ones that
     # (usually) play nice with round 1 constraints get enforced
     ROUND_2_CONST = 0x5A827999
 
