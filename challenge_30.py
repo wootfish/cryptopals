@@ -146,7 +146,6 @@ if __name__ == "__main__":
         return md4(_key + message) == mac
 
     # this is the initial (unforged) MAC
-    # (also checks the padding via an assert inside sha1())
     _preimage = _key + message
     mac1 = md4(_preimage)
 
