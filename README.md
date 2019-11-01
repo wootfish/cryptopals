@@ -17,7 +17,7 @@ There are a few library dependencies as well:
 
 * `pycrypto` to get native-C implementations of some primitives (mostly AES). Whenever a crypto algorithm's internals are the focus of a challenge, I use custom-written, native Python implementations; the rest of the time, I prefer to use these versions because they run much faster.
 * `flask` for challenges 31 and 32, which involve timing attacks carried out over HTTP.
-* `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floating point numbers. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done. Something tells me I'll be making a lot more use of this library if I ever take on Set 8.
+* `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floating point numbers. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done. Something tells me I'll be making some more use of this one when I take on Set 8.
 
 
 # Running
@@ -30,7 +30,7 @@ The challenges are named so that lexographic ordering preserves challenge order,
 
 `for fname in *.py; do echo "========== running $fname =========="; python3 $fname; done`
 
-This will allow you to loop through all the challenges in order. You will be able to Ctrl-C at will on the few challenges that run forever, like 52 and 55, or the few that just take a very long time, like 31, 32, and 56.
+This will allow you to loop through all the challenges in order. You will be able to skip individual challenges at will with Ctrl-C, which is useful for the few scripts that run forever (52, 55) as well as for those that just take a very long time to run (e.g. 31, 32, 56).
 
 
 # Reading
@@ -41,6 +41,6 @@ All custom functions have type annotations. Some crypto primitives (e.g. hash fu
 
 Many of these challenges involve setting global values that are meant to be unknown to the attacker. To sharpen the distinction between known values (like an IV) and secret values (like a key), every time a value is meant to be secret but is technically within scope of the attacking code I've prefixed it with a single underscore, like `_key`. This makes it easy to confirm at a glance that the attack code doesn't touch these values.
 
-I do occasionally make a mockery of PEP-8, most notably in my MD5 implementation (challenge 30). This is only ever done when I think it improves readability. I understand that some might still find it disturbing, but I would remind those people that, in Guido's words, _a foolish consistency is the hobgoblin of little minds._
+I do occasionally throw PEP-8 out the window, most notably in my MD5 implementation (challenge 30). This is only ever done when I think it improves readability. I understand that some might still find it disturbing, but I would remind those people that (in Guido's words) _a foolish consistency is the hobgoblin of little minds._ In other words, part of knowing the rules is knowing when and how to break them.
 
 I think that just about covers it. Thanks for reading, and if you like what you see here, drop me a line :)
