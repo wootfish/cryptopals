@@ -26,75 +26,35 @@ class ConstraintViolatedError(Exception): pass
 
 
 class Constraint:
-    success_message, failure_message = "", ""
-
     def __init__(self, *inds):
-        self.inds = inds
-
-    @staticmethod
-    def test(ind: int, word_1: int, word_2: int) -> bool:
-        raise NotImplementedError
-
-    @staticmethod
-    def ensure(ind: int, word_1: int, word_2: int) -> int:
-        raise NotImplementedError
-
-    def check(self, word_1: int, word_2: int, quiet=True):
-        for ind in self.inds:
-            if self.test(ind, word_1, word_2):
-                if not quiet: print("Check passed:", self.success_message.format(ind))
-            else:
-                if not quiet: print("Check failed:", self.failure_message.format(ind))
-                raise ConstraintViolatedError
-
-    def massage(self, word_1: int, word_2: int) -> int:
-        for ind in self.inds:
-            word_1 = self.ensure(ind, word_1, word_2)
-        return word_1
+        self.mask = 0
+        for ind in inds:
+            self.mask |= (1 << ind)
+        self.mask_inv = self.mask ^ 0xFFFFFFFF
 
 
 class Zeros(Constraint):
-    success_message = "0 bit at index {} found"
-    failure_message = "0 bit at index {} not found"
+    def check(self, word_1: int, word_2: int):
+        return word_1 & self.mask == 0
 
-    @staticmethod
-    def test(ind, word: int, _):
-        return word & (1 << ind) == 0
-
-    @staticmethod
-    def ensure(ind, word: int, _):
-        mask = MODULUS - (1 + (1 << ind))
-        return word & mask
+    def massage(self, word_1: int, word_2: int):
+        return word_1 & self.mask_inv
 
 
 class Ones(Constraint):
-    success_message = "1 bit at index {} found"
-    failure_message = "1 bit at index {} not found"
+    def check(self, word_1, word_2):
+        return word_1 & self.mask == word_1
 
-    @staticmethod
-    def test(ind, word, _):
-        return word & (1 << ind) != 0
-
-    @staticmethod
-    def ensure(ind, word: int, _):
-        return word | (1 << ind)
+    def massage(self, word_1, word_2):
+        return word_1 | self.mask
 
 
 class Eqs(Constraint):
-    success_message = "Equality constraint at index {} met"
-    failure_message = "Equality constraint at index {} not met"
+    def check(self, word_1, word_2):
+        return (word_1 & self.mask) == (word_2 & self.mask)
 
-    @staticmethod
-    def _get_diff(ind, word_1, word_2):
-        return (word_1 ^ word_2) & (1 << ind)
-
-    @staticmethod
-    def test(ind, word_1, word_2):
-        return Eqs._get_diff(ind, word_1, word_2) == 0
-
-    @staticmethod
-    def ensure(ind, word_1: int, word_2: int):
-        return word_1 ^ Eqs._get_diff(ind, word_1, word_2)
+    def massage(self, word_1, word_2):
+        return (word_1 & self.mask_inv) | (word_2 & self.mask)
 
 
 round_1 = [[Eqs(6)],
@@ -135,7 +95,7 @@ def check_constraints(message, quiet=True):
         if not quiet:
             print("Running tests for k =", k)
         for suite in round_1[k]:
-            suite.check(a, b, quiet=quiet)
+            suite.check(a, b)
         return a
 
     X = [struct.unpack("<I", word)[0] for word in bytes_to_chunks(message, 4)]
@@ -152,12 +112,12 @@ def check_constraints(message, quiet=True):
     if not quiet: print("a_5")
     a = r2(a,b,c,d,0x0,3,X)
     for suite in round_2[0]:
-        suite.check(a, c, quiet=quiet)
+        suite.check(a, c)
 
     # d5
     if not quiet: print("d_5")
     d = r2(d,a,b,c,0x4,5,X)
-    round_2[1][0].check(d, a, quiet=quiet)
+    round_2[1][0].check(d, a)
 
     # c5, b5
     c = r2(c,d,a,b,0x8,9,X)
@@ -166,7 +126,7 @@ def check_constraints(message, quiet=True):
     # a6
     if not quiet: print("a_6")
     a = r2(a,b,c,d,1,3,X)
-    round_2[4][0].check(a, b, quiet=quiet)
+    round_2[4][0].check(a, b)
 
 
 
@@ -274,7 +234,7 @@ collision_1 = [big_hex_to_lil_bytes("4d7a9c83 56cb927a b9d5a578 57a7a5ee de748a3
 collision_2 = [big_hex_to_lil_bytes("4d7a9c83 56cb927a b9d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dd8e31 97e31fe5 f713c240 a7b8cf69"),
                big_hex_to_lil_bytes("4d7a9c83 d6cb927a 29d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dc8e31 97e31fe5 f713c240 a7b8cf69")]
 
-# additional collisions generated on Sept 9, 2019 (only round 1 constraints enforced; avg 11 hours per collision)
+# collisions 3 & 4 generated on Sept 9, 2019 (only round 1 constraints enforced; avg 11 hours per collision)
 collision_3 = [bytes.fromhex('232acb10bc1fed8a286ccf95840c41aa68303defcbfa35e0dd3a4e060fdf71fc94b15959e10faf6da86a740b24ed2da1850fee352735f4752a82ca687e1173d2'),
                bytes.fromhex('232acb10bc1fed0a286ccf05840c41aa68303defcbfa35e0dd3a4e060fdf71fc94b15959e10faf6da86a740b24ed2da1850fed352735f4752a82ca687e1173d2')]
 collision_4 = [bytes.fromhex('71342186f79cf951614801861d8f1652917ee6f2d4644431cdd3211d8a30fe91ec1271d9c15aaad70dc69406a7f83206bb09ec3b4e58050bd661597681c4f441'),
