@@ -2,12 +2,19 @@ from random import choice
 from os import urandom
 from base64 import b64decode
 from typing import Optional
+from time import sleep
 
 from Crypto.Cipher import AES
 
 from challenge_02 import bytes_xor
 from challenge_08 import bytes_to_chunks
 from challenge_09 import pkcs7, strip_pkcs7, PaddingError
+
+from threading import Thread
+
+
+PARALLEL = False  # enable to speed up attacks iff the oracle is high-latency
+QUIET = True
 
 
 _key = urandom(16)
@@ -74,12 +81,53 @@ def crack_ciphertext_block(block: bytes, iv: bytes) -> bytes:
     return bytes_xor(plaintext, iv)
 
 
+def crack_ciphertext_block_parallel(block: bytes, iv: bytes) -> bytes:
+    prefix_1 = b'\x00'
+    prefix_2 = b'\x17'  # lucky 17
+    plaintext = b''
+
+    for i in range(1, 17):  # even luckier
+        sleep(0.2)
+        if not QUIET: print("\trecovering byte", i-1)
+        postfix = bytes_xor(plaintext, bytes([i]*(i-1)))
+
+        result = [None]
+        def thread_worker(j):
+            iv_1 = prefix_1*(16-i) + bytes([j]) + postfix
+            iv_2 = prefix_2*(16-i) + bytes([j]) + postfix
+            if padding_oracle(block, iv_1) and padding_oracle(block, iv_2):
+                result[0] = j
+
+        threads = []
+        for j in range(256):
+            thread = Thread(target=thread_worker, args=(j,))
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+        j_final = result[0]
+        if j_final is None:
+            print("No match found for byte", i)
+            raise Exception("oh no!")
+
+        plaintext = bytes([j_final^i]) + plaintext
+
+    if not QUIET: print()
+    return bytes_xor(plaintext, iv)
+
+
 def cbc_oracle_attack(ciphertext: bytes) -> bytes:
     plaintext = b''
     block_iv = iv
     blocks = bytes_to_chunks(ciphertext, 16)
-    for block in blocks:
-        plaintext += crack_ciphertext_block(block, block_iv)
+    for i, block in enumerate(blocks):
+        if not QUIET: print("recovering block", i)
+        if PARALLEL:
+            plaintext += crack_ciphertext_block_parallel(block, block_iv)
+        else:
+            plaintext += crack_ciphertext_block(block, block_iv)
         block_iv = block  # this ct block is effectively the next block's iv
     return strip_pkcs7(plaintext)
 
