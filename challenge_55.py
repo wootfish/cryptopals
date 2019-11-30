@@ -22,7 +22,6 @@ def bin32(n):
     return bin(n)[2:].rjust(32, '0')
 
 
-
 # reference: https://link.springer.com/content/pdf/10.1007%2F11426639_1.pdf
 # for results, see https://twitter.com/elisohl/status/1176283712838782976
 
@@ -132,11 +131,8 @@ def check_constraints(message, quiet=True):
     round_2[1][0].check(d, a)
     round_2[1][1].check(d, b)
 
-    # c5
+    # c5, b5  (these get skipped over by the masseuse)
     c = r2(c,d,a,b,0x8,9,X)
-    #round_2[2][0].check(c, d)
-
-    # b5
     b = r2(b,c,d,a,12,13,X)
 
     # a6
@@ -196,51 +192,52 @@ def massage(message, quiet=True):
     X[4] = r1_inv(4, 3)
 
     ######## d5
-    N_1_orig = (state_log[4] + F(state_log[7], state_log[6], state_log[5])) % MODULUS
-    N_2_orig = (d + G(a, b, c) + ROUND_2_CONST) % MODULUS
+    N_1 = (state_log[4] + F(state_log[7], state_log[6], state_log[5])) % MODULUS
+    N_2 = (d + G(a, b, c) + ROUND_2_CONST) % MODULUS
     m_4 = 0
     b_rot = rrot(b, 5)
 
     def set_d5_bit(N_orig, m, ind, x):
         N = (N_orig + m) % MODULUS
-        m |= (N & (1 << ind)) ^ x
-        return N, m
+        return (N & (1 << ind)) ^ x
 
-    N_1, m_4 = set_d5_bit(N_1_orig, m_4, 4,  1 << 4)
-    N_1, m_4 = set_d5_bit(N_1_orig, m_4, 7,  1 << 7)
-    N_1, m_4 = set_d5_bit(N_1_orig, m_4, 10, (state_log[7] >> 3) & (1 << 10))
-    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 13, (a >> 5) & (1 << 13))
-    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 20, b_rot & (1 << 20))
-    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 21, b_rot & (1 << 21))
-    N_1, m_4 = set_d5_bit(N_1_orig, m_4, 22, 0)
-    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 23, b_rot & (1 << 23))
-    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 23, b_rot & (1 << 24))
-    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 26, b_rot & (1 << 26))
+    m_4 |= set_d5_bit(N_1, m_4, 4, 1 << 4)
+    m_4 |= set_d5_bit(N_1, m_4, 7, 1 << 7)
+    m_4 |= set_d5_bit(N_1, m_4, 10, (state_log[7] >> 3) & (1 << 10))
+    m_4 |= set_d5_bit(N_2, m_4, 13, (a >> 5) & (1 << 13))
+    m_4 |= set_d5_bit(N_2, m_4, 20, b_rot & (1 << 20))
+    m_4 |= set_d5_bit(N_2, m_4, 21, b_rot & (1 << 21))
+    m_4 |= set_d5_bit(N_1, m_4, 22, 0)
+    m_4 |= set_d5_bit(N_2, m_4, 23, b_rot & (1 << 23))
+    m_4 |= set_d5_bit(N_2, m_4, 24, b_rot & (1 << 24))
+    m_4 |= set_d5_bit(N_2, m_4, 26, b_rot & (1 << 26))
 
-    # update the state variables
     X[4] = m_4
     d = r2(d, a, b, c, 4, 5, X)
-    state_log[8] = r1(state_log[4], state_log[7], state_log[6], state_log[5], 4, 3, X)
-    state_log[9] = round_1[5][2].massage(state_log[9], state_log[8])  # make sure d_2's equality constraints with a2 still hold
-    X[5] = (rrot(state_log[9], 7) - state_log[5] - F(state_log[8], state_log[7], state_log[6])) % MODULUS
 
-    # contain the side effects from our modifications to d_5 and d_2
+    # re-massage a_2 and make sure d_2's equality constraints with a2 still hold
+    state_log[8] = r1(state_log[4], state_log[7], state_log[6], state_log[5], 4, 3, X)
+    state_log[9] = round_1[5][2].massage(state_log[9], state_log[8])
+
+    # contain the effects of these changes to a_2 and d_2
+    X[5] = (rrot(state_log[9], 7) - state_log[5] - F(state_log[8], state_log[7], state_log[6])) % MODULUS
     X[6] = r1_inv(6, 11)
     X[7] = r1_inv(7, 19)
     X[8] = r1_inv(8, 3)
     X[9] = r1_inv(9, 7)
 
-    # just skip over these two (c5 and b5)
+    ######## c5 and b5 (just skip over these two)
     c = r2(c,d,a,b,8,9,X)
     b = r2(b,c,d,a,12,13,X)
 
-    # a6  (just kinda yolo this one for now)
+    ######## a6
     a_5 = a
     a = r2(a,b,c,d,1,3,X)
     a = round_2[4][0].massage(a, b)
     X[1] = (rrot(a, 3) - a_5 - G(b, c, d) - ROUND_2_CONST) % MODULUS
     state_log[5] = r1(state_log[1], state_log[4], state_log[3], state_log[2], 1, 7, X)
 
+    # could probably get rid of this while loop w/ enough careful analysis
     while (not round_1[1][0].check(state_log[5], None)
            or not round_1[1][1].check(state_log[5], state_log[4])
            or not round_1[2][2].check(state_log[6], state_log[5])):
@@ -262,6 +259,7 @@ DIFFERENTIALS = ((1, 1 << 31),
                  (2, (1 << 31) - (1 << 28)),
                  (12, -(1 << 16)))
 
+
 def apply_differential(m):
     words = bytes_to_chunks(m, 4)
     for i, delta in DIFFERENTIALS:
@@ -272,12 +270,10 @@ def apply_differential(m):
 
 
 def big_hex_to_lil_bytes(message):
-    """
-    Perversely, Wang et al. use big-endian format for the messages in their
-    example collisions. This helper function loads that hex into bytes,
-    converting each word from big-endian to little-endian in the process
-    (assuming that words are space-delimited, as they are in the paper).
-    """
+    # Perversely, Wang et al. use big-endian format for the messages in their
+    # example collisions. This helper function loads that hex into bytes,
+    # converting each word from big-endian to little-endian in the process
+    # (assuming that words are space-delimited, as they are in the paper).
     return b''.join(bytes.fromhex(h)[::-1] for h in message.split(" "))
 
 
@@ -301,18 +297,19 @@ if __name__ == "__main__":
         assert md4(collision[0]) == md4(collision[1])
         check_constraints(collision[0])
     print("Basic tests passed.")
-
+    print("Searching for collisions...")
     print(datetime.now())
-    print("Searching for collisions..", end='')
+    print()
+
     failures = 0
 
-    from time import perf_counter
-    t_0 = perf_counter()
+    #from time import perf_counter
+    #t_0 = perf_counter()
 
     for i in count():
         if i & 0xFFFF == 0:
-            if i > 0: print("Trial rate (avg trials per sec):", i / (perf_counter() - t_0))
-            #print(end=".", flush=True)
+            #if i > 0: print("Trial rate (avg trials per sec):", i / (perf_counter() - t_0))
+            print(end=".", flush=True)
 
         orig = random.getrandbits(512).to_bytes(64, 'big')
         m1 = massage(orig)
@@ -326,9 +323,6 @@ if __name__ == "__main__":
         #    print("Constraint violation detected: massaging message", orig.hex(), "failed")
         #    if i > 0: print("Failure rate:", failures / i)
         #    print()
-        #else:
-        #    pass
-             #print("this one's a-ok")
 
         if md4(m1) == md4(m2):
             print()
