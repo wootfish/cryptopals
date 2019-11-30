@@ -147,8 +147,6 @@ def check_constraints(message, quiet=True):
 
 
 def massage(message, quiet=True):
-    #assert len(message) == 64
-
     X = [struct.unpack("<I", word)[0] for word in bytes_to_chunks(message, 4)]
     a, b, c, d = 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476
 
@@ -183,7 +181,7 @@ def massage(message, quiet=True):
     # these are a little more involved than round 1 constraints because we need to keep them from stomping on the round
     # 1 changes we've made
 
-    ROUND_2_CONST = 0x5A827999
+    ROUND_2_CONST = 0x5A827999  # constant from addition step in r2 round function
 
     ######## a5
     a_4 = a
@@ -192,77 +190,38 @@ def massage(message, quiet=True):
         a = suite.massage(a, c)
     X[0] = (rrot(a, 3) - a_4 - G(b, c, d) - ROUND_2_CONST) % MODULUS
     state_log[4] = r1(state_log[0], state_log[3], state_log[2], state_log[1], 0, 3, X)  # adjust a_1
-
-    # assert round_1[0][0].check(state_log[4], state_log[3])
-
-    # contain side effects from our change to a_1
     X[1] = r1_inv(1, 7);
     X[2] = r1_inv(2, 11);
     X[3] = r1_inv(3, 19);
     X[4] = r1_inv(4, 3)
 
     ######## d5
-
-    # we gotta get fancier here to enforce both sets of constraints at once
-
     N_1_orig = (state_log[4] + F(state_log[7], state_log[6], state_log[5])) % MODULUS
     N_2_orig = (d + G(a, b, c) + ROUND_2_CONST) % MODULUS
     m_4 = 0
     b_rot = rrot(b, 5)
 
-    # these constraints are hard coded for now - would be nice to clean this up
+    def set_d5_bit(N_orig, m, ind, x):
+        N = (N_orig + m) % MODULUS
+        m |= (N & (1 << ind)) ^ x
+        return N, m
 
-    # m_{4,4}
-    N_1 = (N_1_orig + m_4) % MODULUS
-    m_4 |= (N_1 & (1 << 4)) ^ (1 << 4)
-
-    # m_{4,7}
-    N_1 = (N_1_orig + m_4) % MODULUS
-    m_4 |= (N_1 & (1 << 7)) ^ (1 << 7)
-
-    # m_{4,10}
-    N_1 = (N_1_orig + m_4) % MODULUS
-    m_4 |= (N_1 & (1 << 10)) ^ ((state_log[7] >> 3) & (1 << 10))
-
-    # m_{4,13}
-    N_2 = (N_2_orig + m_4) % MODULUS
-    m_4 |= (N_2 & (1 << 13)) ^ ((a >> 5) & (1 << 13))
-
-    # m_{4,20}  (ayy)
-    N_2 = (N_2_orig + m_4) % MODULUS
-    m_4 |= (N_2 & (1 << 20)) ^ (b_rot & (1 << 20))
-
-    # m_{4,21}
-    N_2 = (N_2_orig + m_4) % MODULUS
-    m_4 |= (N_2 & (1 << 21)) ^ (b_rot & (1 << 21))
-
-    # m_{4,22}
-    N_1 = (N_1_orig + m_4) % MODULUS
-    m_4 |= N_1 & (1 << 22)
-
-    # m_{4,23}
-    N_2 = (N_2_orig + m_4) % MODULUS
-    m_4 |= (N_2 & (1 << 23)) ^ (b_rot & (1 << 23))
-
-    # m_{4,24}
-    N_2 = (N_2_orig + m_4) % MODULUS
-    m_4 |= (N_2 & (1 << 24)) ^ (b_rot & (1 << 24))
-
-    # m_{4,26}
-    N_2 = (N_2_orig + m_4) % MODULUS
-    m_4 |= (N_2 & (1 << 26)) ^ (b_rot & (1 << 26))
+    N_1, m_4 = set_d5_bit(N_1_orig, m_4, 4,  1 << 4)
+    N_1, m_4 = set_d5_bit(N_1_orig, m_4, 7,  1 << 7)
+    N_1, m_4 = set_d5_bit(N_1_orig, m_4, 10, (state_log[7] >> 3) & (1 << 10))
+    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 13, (a >> 5) & (1 << 13))
+    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 20, b_rot & (1 << 20))
+    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 21, b_rot & (1 << 21))
+    N_1, m_4 = set_d5_bit(N_1_orig, m_4, 22, 0)
+    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 23, b_rot & (1 << 23))
+    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 23, b_rot & (1 << 24))
+    N_2, m_4 = set_d5_bit(N_2_orig, m_4, 26, b_rot & (1 << 26))
 
     # update the state variables
     X[4] = m_4
     d = r2(d, a, b, c, 4, 5, X)
     state_log[8] = r1(state_log[4], state_log[7], state_log[6], state_log[5], 4, 3, X)
-
-    #assert all(suite.check(state_log[8], state_log[7]) for suite in round_1[4])
-    #assert round_2[1][0].check(d, a)
-    #assert round_2[1][1].check(d, b)
-
-    # since we changed a_2, update d_2 to preserve its equality constraints
-    state_log[9] = round_1[5][2].massage(state_log[9], state_log[8])
+    state_log[9] = round_1[5][2].massage(state_log[9], state_log[8])  # make sure d_2's equality constraints with a2 still hold
     X[5] = (rrot(state_log[9], 7) - state_log[5] - F(state_log[8], state_log[7], state_log[6])) % MODULUS
 
     # contain the side effects from our modifications to d_5 and d_2
@@ -271,58 +230,11 @@ def massage(message, quiet=True):
     X[8] = r1_inv(8, 3)
     X[9] = r1_inv(9, 7)
 
-
-    ######## c5
-    #c_4 = c
-    c = r2(c,d,a,b,8,9,X)
-    #c = round_2[2][0].massage(c, d)
-    #X[8] = (rrot(c, 9) - c_4 - G(d, a, b) - ROUND_2_CONST) % MODULUS
-    #state_log[12] = r1(state_log[8], state_log[11], state_log[10], state_log[9], 8, 3, X)  # adjust a_3
-
-    ###
-
-    #while (False in tuple(suite.check(state_log[12], state_log[11]) for suite in round_1[8])
-    #       or not round_1[9][2].check(state_log[13], state_log[12])
-    #       or not round_2[2][0].check(c, d)):
-    #    # round 1 massage
-    #    X[8] = random.getrandbits(32)
-    #    a_2 = r1(state_log[8], state_log[11], state_log[10], state_log[9], 8, 3, X)
-    #    for suite in round_1[8]:
-    #        a_2 = suite.massage(a_2, state_log[11])
-    #    X[8] = (rrot(a_2, 3) - state_log[8] - F(state_log[11], state_log[10], state_log[9]))
-    #    state_log[12] = a_2
-    #    c = r2(c_4, d, a, b, 8, 9, X)
-
-    #    # round 2 massage
-    #    c = round_2[2][0].massage(c, d)
-    #    X[8] = (rrot(c, 9) - c_4 - G(d, a, b) - ROUND_2_CONST) % MODULUS
-    #    a_2 = r1(state_log[8], state_log[11], state_log[10], state_log[9], 8, 3, X)
-    #    state_log[12] = a_2
-
-    #    print('  v  v vv     ')
-    #    print(bin(c))
-    #    print(bin(d))
-    #    print(tuple(suite.check(state_log[12], state_log[11]) for suite in round_1[8]),
-    #       round_1[9][2].check(state_log[13], state_log[12]),
-    #       round_2[2][0].check(c, d))
-
-
-    #    #c = r2(c_4, d, a, b, 8, 9, X)
-    #    #c = round_2[2][0].massage(c, d)
-    #    #X[8] = (rrot(c, 9) - c_4 - G(d, a, b) - ROUND_2_CONST) % MODULUS
-    #    #state_log[12] = r1(state_log[8], state_log[11], state_log[10], state_log[9], 8, 3, X)
-    #    #print(tuple(suite.check(state_log[12], state_log[11]) for suite in round_1[8]), round_1[9][2].check(state_log[13], state_log[12]))
-
-    X[9] = r1_inv(9, 7)
-    X[10] = r1_inv(10, 11)
-    X[11] = r1_inv(11, 19)
-    X[12] = r1_inv(12, 3)
-
     # just skip over these two (c5 and b5)
-    #c = r2(c,d,a,b,8,9,X)
+    c = r2(c,d,a,b,8,9,X)
     b = r2(b,c,d,a,12,13,X)
 
-    # a6
+    # a6  (just kinda yolo this one for now)
     a_5 = a
     a = r2(a,b,c,d,1,3,X)
     a = round_2[4][0].massage(a, b)
@@ -378,29 +290,29 @@ collision_2 = [big_hex_to_lil_bytes("4d7a9c83 56cb927a b9d5a578 57a7a5ee de748a3
 
 if __name__ == "__main__":
     print("Running tests.")
-    #assert rrot(leftrotate(123456789, 10), 10) == 123456789
-    #check_constraints(massage(b'\x00'*64))
-    #check_constraints(massage(b'\x17'*64))
-    #check_constraints(massage(b'test'*16))
-    #check_constraints(massage(b'beer'*16))
-    #check_constraints(massage(b'16-character str'*4))
-    #for collision in (collision_1, collision_2):
-    #    assert apply_differential(collision[0]) == collision[1]
-    #    assert md4(collision[0]) == md4(collision[1])
-    #    check_constraints(collision[0])
+    assert rrot(leftrotate(123456789, 10), 10) == 123456789
+    check_constraints(massage(b'\x00'*64))
+    check_constraints(massage(b'\x17'*64))
+    check_constraints(massage(b'test'*16))
+    check_constraints(massage(b'beer'*16))
+    check_constraints(massage(b'16-character str'*4))
+    for collision in (collision_1, collision_2):
+        assert apply_differential(collision[0]) == collision[1]
+        assert md4(collision[0]) == md4(collision[1])
+        check_constraints(collision[0])
     print("Basic tests passed.")
 
     print(datetime.now())
     print("Searching for collisions..", end='')
     failures = 0
 
-    #from time import perf_counter
-    #t_0 = perf_counter()
+    from time import perf_counter
+    t_0 = perf_counter()
 
     for i in count():
         if i & 0xFFFF == 0:
-            #if i > 0: print("Trial rate (avg trials per sec):", i / (perf_counter() - t_0))
-            print(end=".", flush=True)
+            if i > 0: print("Trial rate (avg trials per sec):", i / (perf_counter() - t_0))
+            #print(end=".", flush=True)
 
         orig = random.getrandbits(512).to_bytes(64, 'big')
         m1 = massage(orig)
@@ -416,7 +328,7 @@ if __name__ == "__main__":
         #    print()
         #else:
         #    pass
-            #print("this one's a-ok")
+             #print("this one's a-ok")
 
         if md4(m1) == md4(m2):
             print()
