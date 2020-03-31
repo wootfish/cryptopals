@@ -41,6 +41,6 @@ All custom functions have type annotations. Some crypto primitives (e.g. hash fu
 
 Many of these challenges involve setting global values that are meant to be unknown to the attacker. To sharpen the distinction between known values (like an IV) and secret values (like a key), every time a value is meant to be secret but is technically within scope of the attacking code I've prefixed it with a single underscore, like `_key`. This makes it easy to confirm at a glance that the attack code doesn't touch these values.
 
-I do occasionally throw PEP-8 out the window, most notably in my MD5 implementation (challenge 30). This is only ever done when I think it improves readability. I understand that some might still find it disturbing, but I would remind those people that (in Guido's words) _a foolish consistency is the hobgoblin of little minds._ In other words, part of knowing the rules is knowing when and how to break them.
+I do occasionally throw PEP-8 out the window, most notably in my MD5 implementation (challenge 30). This is only ever done when I think it improves readability. I understand that some might still find it disturbing, but I would remind those people that (in Guido's words) _a foolish consistency is the hobgoblin of little minds._ Point being, part of knowing the rules is knowing when and how to break them.
 
-I think that just about covers it. Thanks for reading, and if you like what you see here, drop me a line :)
+I think that just about covers it. Thanks for reading, and if you like what you see here, feel free to drop me a line :)
