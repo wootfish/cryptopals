@@ -5,3 +5,5 @@ venv/
 
 *.swp
 *.swo
+
+*.ipynb
