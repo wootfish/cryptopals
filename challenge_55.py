@@ -6,7 +6,7 @@ from datetime import datetime
 
 from challenge_08 import bytes_to_chunks
 from challenge_28 import leftrotate
-from challenge_30 import F, G, r1, r2
+from challenge_30 import F, G, r1, r2, r3
 
 from Crypto.Hash import MD4  # way faster than the native version from challenge 30
 
@@ -85,8 +85,8 @@ round_1 = [[Eqs(6)],
 
 round_2 = [[Zeros(26), Ones(25, 28, 31), Eqs(18)],
            [Eqs(18), Eqs(25, 26, 28, 31)],  # d_5 has equality constraints for both a_5 & b_4
-           [], #[Eqs(29)], #[Eqs(25, 26, 28, 29, 31)],
-           [], #[Zeros(31), Ones(29), Eqs(28)]]
+           [Eqs(25, 26, 28, 29, 31)],
+           [Zeros(31), Ones(29), Eqs(28)],
            [Ones(28)]]
 
 
@@ -96,6 +96,9 @@ def rrot(word: int, steps: int = 1, length: int = 32) -> int:
 
 def check_constraints(message, quiet=True):
     assert len(message) == 64
+
+    # checks for constraints that have been enforced have been commented out;
+    # uncomment to see how frequently they happen to be satisfied by chance
 
     def f(a, b, c, d, k, s, X):
         # serves as normal round function, but also checks constraint validity
@@ -131,15 +134,43 @@ def check_constraints(message, quiet=True):
     round_2[1][0].check(d, a)
     round_2[1][1].check(d, b)
 
-    # c5, b5  (these get skipped over by the masseuse)
+    # c5, b5
     c = r2(c,d,a,b,0x8,9,X)
+    # round_2[2][0].check(c, d)
+
     b = r2(b,c,d,a,12,13,X)
+    # for suite in round_2[3]:
+    #     suite.check(b, c)
 
     # a6
     if not quiet: print("a_6")
     a = r2(a,b,c,d,1,3,X)
     round_2[4][0].check(a, b)
 
+    # d6
+    d = r2(d,a,b,c,5,5,X)
+    # Eqs(28).check(d, b)
+
+    # c6
+    c = r2(c,d,a,b,9,9,X)
+    # Eqs(28).check(c, d)
+    # if c & (1 << 29) == d & (1 << 29):
+    #     raise ConstraintViolatedError
+    # if c & (1 << 31) == d & (1 << 31):
+    #     raise ConstraintViolatedError
+
+    # skip ahead to b9
+    b = r2(b,c,d,a,13,13,X)
+    a = r2(a,b,c,d,2,3,X); d = r2(d,a,b,c,6,5,X); c = r2(c,d,a,b,10,9,X); b = r2(b,c,d,a,14,13,X)
+    a = r2(a,b,c,d,3,3,X); d = r2(d,a,b,c,7,5,X); c = r2(c,d,a,b,11,9,X); b = r2(b,c,d,a,15,13,X)
+    a = r3(a,b,c,d,0,3,X); d = r3(d,a,b,c,8,9,X); c = r3(c,d,a,b,4,11,X); b = r3(b,c,d,a,12,15,X)
+    # if b & (1 << 31) == 0:
+    #     raise ConstraintViolatedError
+
+    # a10
+    a = r3(a,b,c,d,2,3,X)
+    # if a & (1 << 31) == 0:
+    #     raise ConstraintViolatedError
 
 
 def massage(message, quiet=True):
@@ -270,10 +301,10 @@ def apply_differential(m):
 
 
 def big_hex_to_lil_bytes(message):
-    # Perversely, Wang et al. use big-endian format for the messages in their
-    # example collisions. This helper function loads that hex into bytes,
-    # converting each word from big-endian to little-endian in the process
-    # (assuming that words are space-delimited, as they are in the paper).
+    # Wang et al. use big-endian format for the messages in their example
+    # collisions. This helper function loads that hex into bytes, converting
+    # each word from big-endian to little-endian in the process (assuming that
+    # words are space-delimited, as they are in the paper).
     return b''.join(bytes.fromhex(h)[::-1] for h in message.split(" "))
 
 
@@ -284,7 +315,7 @@ collision_2 = [big_hex_to_lil_bytes("4d7a9c83 56cb927a b9d5a578 57a7a5ee de748a3
                big_hex_to_lil_bytes("4d7a9c83 d6cb927a 29d5a578 57a7a5ee de748a3c dcc366b3 b683a020 3b2a5d9f c69d71b3 f9e99198 d79f805e a63bb2e8 45dc8e31 97e31fe5 f713c240 a7b8cf69")]
 
 
-if __name__ == "__main__":
+def run_tests():
     print("Running tests.")
     assert rrot(leftrotate(123456789, 10), 10) == 123456789
     check_constraints(massage(b'\x00'*64))
@@ -296,38 +327,54 @@ if __name__ == "__main__":
         assert apply_differential(collision[0]) == collision[1]
         assert md4(collision[0]) == md4(collision[1])
         check_constraints(collision[0])
-    print("Basic tests passed.")
-    print("Searching for collisions...")
-    print(datetime.now())
-    print()
+    print("Tests passed.")
 
-    failures = 0
 
-    #from time import perf_counter
-    #t_0 = perf_counter()
+def find_collisions(check_constraints=False, report_trial_rate=False):
+    if check_constraints:
+        failures = 0
+
+    if report_trial_rate:
+        from time import perf_counter
+        t_0 = perf_counter()
 
     for i in count():
-        if i & 0xFFFF == 0:
-            #if i > 0: print("Trial rate (avg trials per sec):", i / (perf_counter() - t_0))
-            print(end=".", flush=True)
+        # occasionally print something so the user knows we're still running
+        if i & 0xFFFF == 10:
+            if report_trial_rate:
+                print("Trial rate (avg trials per sec):", i / (perf_counter() - t_0))
+            else:
+                print(".", end="", flush=True)
 
+        # massage some random bytes. if we get a collision then yield (m1, m2)
         orig = random.getrandbits(512).to_bytes(64, 'big')
         m1 = massage(orig)
         m2 = apply_differential(m1)
 
-        # uncomment to confirm massaging is working (disabled for speed)
-        #try:
-        #    check_constraints(m1)
-        #except ConstraintViolatedError:
-        #    failures += 1
-        #    print("Constraint violation detected: massaging message", orig.hex(), "failed")
-        #    if i > 0: print("Failure rate:", failures / i)
-        #    print()
+        if check_constraints:
+            # confirm massaging is working (disabled by default for speed)
+            try:
+                check_constraints(m1)
+            except ConstraintViolatedError:
+                failures += 1
+                print("Constraint violation detected: massaging message", orig.hex(), "failed")
+                if i > 0: print("Failure rate:", failures / i)
+                print()
 
         if md4(m1) == md4(m2):
-            print()
-            print(datetime.now())
-            print("Collision found!!")
-            print(f"md4(bytes.fromhex('{m1.hex()}')) = {md4(m1)}")
-            print(f"md4(bytes.fromhex('{m2.hex()}')) = {md4(m2)}")
-            print()
+            yield m1, m2  # we've got a hit!
+
+
+if __name__ == "__main__":
+    run_tests()
+    print("Searching for collisions...")
+    print(datetime.now())
+    print()
+
+    for m1, m2 in find_collisions(report_trial_rate=True):
+        print()
+        print(datetime.now())
+        print("Collision found!!")
+        print(f"md4(bytes.fromhex('{m1.hex()}')) = {md4(m1)}")
+        print(f"md4(bytes.fromhex('{m2.hex()}')) = {md4(m2)}")
+        print()
