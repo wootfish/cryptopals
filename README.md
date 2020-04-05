@@ -4,20 +4,20 @@ These are my solutions to the Cryptopals Challenges. They are written in Python 
 
 I've had so much fun working through these over the last few months that I can't resist sharing my results. I've tried to make them as readable as possible.
 
-That said, if you're working through these yourself, try to resist looking at other people's work too much - you learn more when you figure things out for yourself!
+That said, if you're working through these challenges yourself, try to resist spending too much time looking at other people's work - you learn more when you figure the problems out for yourself!
 
 If you're interested in this stuff, feel free to hit me up [on Twitter](https://twitter.com/elisohl) or [elsewhere](https://eli.sohl.com/contact).
 
 
 # Requirements
 
-Some of these scripts require Python 3.6+, because I like to use f-strings for complex outputs.
+Some of these scripts require Python 3.6+, mostly just because I like to use f-strings for complex outputs.
 
 There are a few library dependencies as well:
 
 * `pycrypto` to get native-C implementations of some primitives (mostly AES). Whenever a crypto algorithm's internals are the focus of a challenge, I use custom-written, native Python implementations; the rest of the time, I prefer to use these versions because they run much faster.
 * `flask` for challenges 31 and 32, which involve timing attacks carried out over HTTP.
-* `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floating point numbers. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done. Something tells me I'll be making some more use of this one when I take on Set 8.
+* `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floating point numbers. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done.
 
 
 # Running
@@ -41,6 +41,6 @@ All custom functions have type annotations. Some crypto primitives (e.g. hash fu
 
 Many of these challenges involve setting global values that are meant to be unknown to the attacker. To sharpen the distinction between known values (like an IV) and secret values (like a key), every time a value is meant to be secret but is technically within scope of the attacking code I've prefixed it with a single underscore, like `_key`. This makes it easy to confirm at a glance that the attack code doesn't touch these values.
 
-I do occasionally throw PEP-8 out the window, most notably in my MD5 implementation (challenge 30). This is only ever done when I think it improves readability. I understand that some might still find it disturbing, but I would remind those people that (in Guido's words) _a foolish consistency is the hobgoblin of little minds._ In other words, part of knowing the rules is knowing when and how to break them.
+I do occasionally throw PEP-8 out the window, most notably in my MD5 implementation (challenge 30). This is only ever done when I think it improves readability. I understand that some might still find it disturbing, but I would remind those people that (in Guido's words) _a foolish consistency is the hobgoblin of little minds._ Point being, part of knowing the rules is knowing when and how to break them.
 
-I think that just about covers it. Thanks for reading, and if you like what you see here, drop me a line :)
+I think that just about covers it. Thanks for reading, and if you like what you see here, feel free to drop me a line :)
