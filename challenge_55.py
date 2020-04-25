@@ -371,7 +371,7 @@ if __name__ == "__main__":
     print(datetime.now())
     print()
 
-    for m1, m2 in find_collisions(report_trial_rate=True):
+    for m1, m2 in find_collisions(report_trial_rate=False):
         print()
         print(datetime.now())
         print("Collision found!!")
