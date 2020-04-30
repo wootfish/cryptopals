@@ -113,7 +113,7 @@ def crack_dh():
 
 def main():
     crack_y1()
-    #crack_y2()
+    crack_y2()
     print("\n---- later ----\n")
     crack_dh()
 
