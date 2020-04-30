@@ -45,15 +45,13 @@ def crt(residues, moduli):
 def bob(message=b"crazy flamboyant for the rap enjoyment"):
     # coroutine: expects DH public keys, yields (message, MAC) pairs
     print("\nBob: Generating DH key.")
-    a = randrange(0, q)
-    A = pow(g, a, p)
-    print(f"Bob: a = {a}, A = {A}")
+    x = randrange(0, q)
+    print(f"Bob: x = {x}")
     print()
 
     h = (yield)
     while True:
-        secret = pow(h, a, p)
-        print("Bob: Computed shared secret", secret)
+        secret = pow(h, x, p)
         K = do_sha256(secret.to_bytes(64, 'big'))
         t = hmac(K, message)
         h = (yield (message, t))
@@ -73,6 +71,7 @@ if __name__ == "__main__":
         if j % prime == 0 and (j // prime) % p != 0:
             j_factors.append(prime)
     print("Some small, non-repeated factors of j:", j_factors)
+    print()
 
     # make sure we've got enough factors to use the CRT
     assert reduce(mul, j_factors, 1) > q
@@ -80,14 +79,16 @@ if __name__ == "__main__":
     # run the attack once per factor
     residues = []
     for r in j_factors:
-        print(f"\nLaunching attack (r={r})...")
+        print(f" {r} ... ", end="", flush=True)
 
+        # search for an element h of order r
         while True:
             h = pow(randrange(2, p), (p-1)//r, p)
             if h != 1:
                 assert pow(h, r, p) == 1
                 break
 
+        # send h, get back a message mac'd by our "shared secret"
         message, t = b.send(h)
 
         # recover bob's session secret from t
@@ -97,8 +98,8 @@ if __name__ == "__main__":
             if hmac(K, message) == t:
                 break
 
-        print("Eve: Recovered shared secret", secret)
+        print("Done.")
         residues.append(i)
 
-    print("\n\nResidue collection complete. Deriving Bob's secret key...")
-    print(crt(residues, j_factors)[0])
+    print("\nResidue collection complete. Using CRT to derive Bob's secret key...")
+    print("x =", crt(residues, j_factors)[0])
