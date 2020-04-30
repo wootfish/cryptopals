@@ -88,7 +88,7 @@ def crack_dh():
 
     g_prime = pow(g, r, p)
     print("g' = g ^ r")
-    print("  =", g_prime)
+    print("   =", g_prime)
     print()
 
     g_inv = invmod(g, p)
