@@ -15,7 +15,7 @@ def f(y, k):
     return 2 ** (y % k)
 
 
-def pollard(y, a, b, k=10, g=g, p=p, quiet=True):
+def pollard(y, a, b, k=11, g=g, p=p, quiet=True):
     # implementation of Pollard's kangaroo algorithm. May return None (since the
     # algorithm is probabilistic)
 
@@ -60,7 +60,7 @@ def crack_y2():
     a_2, b_2 = 0, 2**40
 
     print("\n\nTrying y_2... (this will take a couple minutes)\n")
-    print("\nDone!", pollard(y_2, a_2, b_2, k=24, quiet=False))
+    print("\nDone!", pollard(y_2, a_2, b_2, k=23, quiet=False))
 
 
 def crack_dh():
