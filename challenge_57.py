@@ -43,14 +43,16 @@ def crt(residues, moduli):
     return result
 
 
-def bob(message=b"crazy flamboyant for the rap enjoyment", p=p, q=q):
+def bob(message=b"crazy flamboyant for the rap enjoyment", p=p, q=q, g=g):
     # coroutine: expects DH public keys, yields (message, MAC) pairs
     print("\nBob: Generating DH key.")
     x = randrange(0, q)
+    x_pub = pow(g, x, p)  # public key - only yielded, not used
     print(f"Bob: x = {x}")
+    print(f"Bob: public key = {x_pub}")
     print()
 
-    h = (yield)
+    h = (yield x_pub)
     while True:
         secret = pow(h, x, p)
         K = do_sha256(secret.to_bytes(64, 'big'))
@@ -58,7 +60,7 @@ def bob(message=b"crazy flamboyant for the rap enjoyment", p=p, q=q):
         h = (yield (message, t))
 
 
-def get_residues(target, moduli, quiet=True):
+def get_residues(target, moduli, p=p, quiet=True):
     residues = []
 
     # run the attack once per modulus
