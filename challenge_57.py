@@ -43,7 +43,7 @@ def crt(residues, moduli):
     return result
 
 
-def bob(message=b"crazy flamboyant for the rap enjoyment"):
+def bob(message=b"crazy flamboyant for the rap enjoyment", p=p, q=q):
     # coroutine: expects DH public keys, yields (message, MAC) pairs
     print("\nBob: Generating DH key.")
     x = randrange(0, q)
@@ -96,7 +96,7 @@ def main():
     # partially factor j
     print(f"j = {j}")
     j_factors = [p for p in primegen(up_to=2**16)
-            if j % p == 0 and (j // p) % p != 0]  # avoid repeated factors
+                 if j % p == 0 and (j // p) % p != 0]  # avoid repeated factors
     print("Some small, non-repeated factors of j:", j_factors)
     print()
 
