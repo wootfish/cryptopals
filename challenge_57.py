@@ -14,10 +14,11 @@ q = 236234353446506858198510045061214171961
 j = 30477252323177606811760882179058908038824640750610513771646768011063128035873508507547741559514324673960576895059570
 
 
-def primegen():
+def primegen(up_to=None):
     yield 2
     d = {}
-    for i in count(3, 2):
+    counter = count(3, 2) if up_to is None else range(3, up_to, 2)
+    for i in counter:
         l = d.pop(i, None)
         if l:
             for n in l:
@@ -57,31 +58,14 @@ def bob(message=b"crazy flamboyant for the rap enjoyment"):
         h = (yield (message, t))
 
 
-if __name__ == "__main__":
-    # initialize bob
-    b = bob()
-    next(b)
-
-    # partially factor j
-    print(f"j = {j}")
-    j_factors = []
-    for prime in primegen():
-        if prime > 2**16:
-            break
-        if j % prime == 0 and (j // prime) % p != 0:
-            j_factors.append(prime)
-    print("Some small, non-repeated factors of j:", j_factors)
-    print()
-
-    # make sure we've got enough factors to use the CRT
-    assert reduce(mul, j_factors, 1) > q
-
-    # run the attack once per factor
+def get_residues(target, moduli, quiet=True):
     residues = []
-    for r in j_factors:
-        print(f" {r} ... ", end="", flush=True)
 
-        # search for an element h of order r
+    # run the attack once per modulus
+    for r in moduli:
+        if not quiet: print(end=f"r = {r} ... ", flush=True)
+
+        # randomly search the group for an element h of order r
         while True:
             h = pow(randrange(2, p), (p-1)//r, p)
             if h != 1:
@@ -89,7 +73,7 @@ if __name__ == "__main__":
                 break
 
         # send h, get back a message mac'd by our "shared secret"
-        message, t = b.send(h)
+        message, t = target.send(h)
 
         # recover bob's session secret from t
         for i in range(r):
@@ -98,8 +82,35 @@ if __name__ == "__main__":
             if hmac(K, message) == t:
                 break
 
-        print("Done.")
+        if not quiet: print("Done.")
         residues.append(i)
 
+    return residues
+
+
+def main():
+    # initialize bob
+    b = bob()
+    next(b)
+
+    # partially factor j
+    print(f"j = {j}")
+    j_factors = [p for p in primegen(up_to=2**16)
+            if j % p == 0 and (j // p) % p != 0]  # avoid repeated factors
+    print("Some small, non-repeated factors of j:", j_factors)
+    print()
+
+    # make sure we've got enough factors to use the CRT
+    assert reduce(mul, j_factors, 1) > q
+
+    # collect residues of x mod each j_factor, then apply the CRT
+    residues = get_residues(b, j_factors, quiet=False)
+    x = crt(residues, j_factors)[0]
+
+    # done!
     print("\nResidue collection complete. Using CRT to derive Bob's secret key...")
-    print("x =", crt(residues, j_factors)[0])
+    print("x =", x)
+
+
+if __name__ == "__main__":
+    main()
