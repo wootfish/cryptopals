@@ -43,7 +43,8 @@ def crt(residues, moduli):
     return result
 
 
-def bob(message=b"crazy flamboyant for the rap enjoyment", p=p, q=q, g=g):
+def bob(message=b"crazy flamboyant for the rap enjoyment", p=p, q=q, g=g,
+        pow=pow, get_bytes=lambda n: n.to_bytes(64, 'big')):
     # coroutine: expects DH public keys, yields (message, MAC) pairs
     print("\nBob: Generating DH key.")
     x = randrange(0, q)
@@ -54,8 +55,8 @@ def bob(message=b"crazy flamboyant for the rap enjoyment", p=p, q=q, g=g):
 
     h = (yield x_pub)
     while True:
-        secret = pow(h, x, p)
-        K = do_sha256(secret.to_bytes(64, 'big'))
+        secret = get_bytes(pow(h, x, p))
+        K = do_sha256(secret)
         t = hmac(K, message)
         h = (yield (message, t))
 
