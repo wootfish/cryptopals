@@ -11,7 +11,7 @@ I've tried to make the scripts as readable aspossible.
 
 If you're working through these challenges yourself, try to resist spending too
 much time looking at other people's work - you learn more when you figure the
-problems out for yourself!
+problems out on your own!
 
 If you're interested in this stuff, feel free to hit me up
 [on Twitter](https://twitter.com/elisohl) or
@@ -20,14 +20,13 @@ If you're interested in this stuff, feel free to hit me up
 
 # Requirements
 
-Some of these scripts require Python 3.6+, usually because I prefer to use
-f-strings for complex outputs.
+Some of these scripts require Python 3.6+, usually because I like to use f-strings.
 
 There are a few library dependencies as well:
 
 * `pycrypto` to get native-C implementations of some primitives (mostly AES). Whenever a crypto algorithm's internals are the focus of a challenge, I use custom-written, native Python implementations; the rest of the time, I prefer to use these versions because they run much faster.
 * `flask` for challenges 31 and 32, which involve timing attacks carried out over HTTP.
-* `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floating point numbers. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done.
+* `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floats. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done.
 
 
 # Running
@@ -56,19 +55,19 @@ long time to run (e.g. 31, 32, 56).
 
 # Reading
 
-There are a few style conventions I've followed to make these scripts easier to
+I've established some style conventions to try and make these scripts easier to
 read.
 
-All custom functions have type annotations. Why? Well, some crypto primitives
-(e.g. hash functions, block ciphers) represent messages as bytestrings, whereas
-others (e.g. RSA) might more conveniently represent messages as very large
-integers; still other functions (e.g. the oracle in challenge 51) might deal
-natively with `str`s. Type annotations provide implicit documentation as to how
-we're representing messages in any given challenge.
+To start: almost all custom functions have type annotations.
 
-There are likely a few places where I've forgotten to add annotations, but I've
-tried to make sure they're present wherever they might be useful as
-disambiguators.
+Why? Well, some crypto functions (e.g. hash functions, block ciphers) represent
+messages as bytestrings, whereas others (e.g. RSA) might more conveniently
+represent messages as very large integers; still other functions (e.g. the oracle
+in challenge 51) might deal natively with `str`s. Type annotations provide implicit
+documentation as to how we're representing messages in any given challenge.
+
+There are likely a few places I've missed, but I've tried to make sure annotations
+are present wherever they might be useful as disambiguators.
 
 Many of these challenges start with initializing some global values which are
 meant to be unknown to the attacker. To sharpen the distinction between public
@@ -77,7 +76,7 @@ to be secret but is technically within scope of the attacking code I've prefixed
 it with a single underscore, like `_key`. This makes it easy to confirm at a
 glance that the attack code doesn't touch these values.
 
-I do occasionally throw PEP-8 out the window, most notably in my MD5
+I do occasionally throw PEP-8 out the window, most notably in my MD4
 implementation (challenge 30). This is only ever done when I think it improves
 readability. I understand that some might still find it disturbing. To them I
 say: lighten up. The code still reads just fine.
