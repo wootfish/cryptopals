@@ -1,17 +1,15 @@
 # cryptopals
 
 These are my solutions to the Cryptopals Challenges. They are written in Python
-3.
+3. I've had a lot of fun working through these, so I thought I'd share my results.
+I've tried to make the scripts as readable as possible.
 
-You can find the first seven sets of challenges [here](https://cryptopals.com),
-and the eighth set is available [here](https://toadstyle.org/cryptopals/).
-
-I've had a lot of fun working through these and I thought I'd share my results.
-I've tried to make the scripts as readable aspossible.
+You can find the first seven sets of challenges [here](https://cryptopals.com).
+The eighth set is available [here](https://toadstyle.org/cryptopals/).
 
 If you're working through these challenges yourself, try to resist spending too
-much time looking at other people's work - you learn more when you figure the
-problems out on your own!
+much time looking at other people's work - you learn more from these when you
+figure them out on your own!
 
 If you're interested in this stuff, feel free to hit me up
 [on Twitter](https://twitter.com/elisohl) or
