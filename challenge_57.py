@@ -61,7 +61,18 @@ def bob(message=b"crazy flamboyant for the rap enjoyment", p=p, q=q, g=g,
         h = (yield (message, t))
 
 
-def get_residues(target, moduli, p=p, quiet=True):
+def find_int_of_order_r(r, p):
+    while True:
+        h = pow(randrange(2, p), (p-1)//r, p)
+        if h != identity:
+            assert pow(h, r, p) == identity
+            return h
+
+
+def get_residues(target, moduli, p=p, quiet=True, pow=pow,
+        get_bytes=lambda n: n.to_bytes(64, 'big'),
+        get_random_point=find_int_of_order_r):
+
     residues = []
 
     # run the attack once per modulus
@@ -69,10 +80,11 @@ def get_residues(target, moduli, p=p, quiet=True):
         if not quiet: print(end=f"r = {r} ... ", flush=True)
 
         # randomly search the group for an element h of order r
+        h = get_random_point(r, p)
         while True:
             h = pow(randrange(2, p), (p-1)//r, p)
-            if h != 1:
-                assert pow(h, r, p) == 1
+            if h != identity:
+                assert pow(h, r, p) == identity
                 break
 
         # send h, get back a message mac'd by our "shared secret"
@@ -80,8 +92,8 @@ def get_residues(target, moduli, p=p, quiet=True):
 
         # recover bob's session secret from t
         for i in range(r):
-            secret = pow(h, i, p)
-            K = do_sha256(secret.to_bytes(64, 'big'))
+            secret = get_bytes(pow(h, i, p))
+            K = do_sha256(secret)
             if hmac(K, message) == t:
                 break
 
@@ -91,6 +103,11 @@ def get_residues(target, moduli, p=p, quiet=True):
     return residues
 
 
+def get_small_non_repeated_factors(j, up_to=2**16):
+    return [p for p in primegen(up_to=2**16)
+            if j % p == 0 and (j // p) % p != 0]
+
+
 def main():
     # initialize bob
     b = bob()
@@ -98,21 +115,18 @@ def main():
 
     # partially factor j
     print(f"j = {j}")
-    j_factors = [p for p in primegen(up_to=2**16)
-                 if j % p == 0 and (j // p) % p != 0]  # avoid repeated factors
+    j_factors = get_small_non_repeated_factors(j)
     print("Some small, non-repeated factors of j:", j_factors)
     print()
 
     # make sure we've got enough factors to use the CRT
     assert reduce(mul, j_factors, 1) > q
 
-    # collect residues of x mod each j_factor, then apply the CRT
+    # collect residues, then apply the chinese remainder theorem
     residues = get_residues(b, j_factors, quiet=False)
-    x = crt(residues, j_factors)[0]
-
-    # done!
     print("\nResidue collection complete. Using CRT to derive Bob's secret key...")
-    print("x =", x)
+    x = crt(residues, j_factors)[0]
+    print("x =", x)  # done!
 
 
 if __name__ == "__main__":
