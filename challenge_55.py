@@ -97,8 +97,8 @@ def rrot(word: int, steps: int = 1, length: int = 32) -> int:
 def check_constraints(message, quiet=True):
     assert len(message) == 64
 
-    # checks for constraints that have been enforced have been commented out;
-    # uncomment to see how frequently they happen to be satisfied by chance
+    # checks for unenforced constraints are currently commented out; uncomment
+    # to see how frequently they happen to be satisfied by chance
 
     def f(a, b, c, d, k, s, X):
         # serves as normal round function, but also checks constraint validity
@@ -205,8 +205,8 @@ def massage(message, quiet=True):
 
     # enforce round 2 constraints
 
-    # these are a little more involved than round 1 constraints because we need to keep them from stomping on the round
-    # 1 changes we've made
+    # these are a little more involved than round 1 constraints because we need
+    # to keep them from stomping on the round 1 changes we've made
 
     ROUND_2_CONST = 0x5A827999  # constant from addition step in r2 round function
 
@@ -353,13 +353,13 @@ def find_collisions(check_constraints=False, report_trial_rate=False):
 
         if check_constraints:
             # confirm massaging is working (disabled by default for speed)
-            try:
-                check_constraints(m1)
-            except ConstraintViolatedError:
-                failures += 1
-                print("Constraint violation detected: massaging message", orig.hex(), "failed")
-                if i > 0: print("Failure rate:", failures / i)
-                print()
+            #try:
+            #    check_constraints(m1)
+            #except ConstraintViolatedError:
+            #    failures += 1
+            #    print("Constraint violation detected: massaging message", orig.hex(), "failed")
+            #    if i > 0: print("Failure rate:", failures / i)
+            #    print()
 
         if md4(m1) == md4(m2):
             yield m1, m2  # we've got a hit!
