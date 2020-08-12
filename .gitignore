@@ -6,5 +6,4 @@ venv/
 *.swp
 *.swo
 
-*.ipynb
 .ipynb_checkpoints/
