@@ -4,6 +4,55 @@ from random import randrange
 from itertools import count
 
 
+class Zero:
+    pass
+
+
+class Curve:
+    def __init__(self, a, b, p):
+        self.zero = Zero()
+        self.a = a
+        self.b = b
+        self.p = p
+
+    def inv(self, pt):
+        x, y = pt
+        p = self.p
+        return (x, p-y)  # = (x, -y) in GF(p)
+
+    def add(self, p1, p2):  # don't worry about how this works. it's ~magic~
+        zero = self.zero
+        if p1 is zero: return p2
+        if p2 is zero: return p1
+        if p1 == self.inv(p2): return zero
+
+        a, p = self.a, self.p
+        x1, y1 = p1
+        x2, y2 = p2
+
+        if p1 == p2:
+            top = (3 * x1**2 + a) % p
+            btm = (2 * y1) % p
+        else:
+            top = (y2 - y1) % p
+            btm = (x2 - x1) % p
+        m = (top * invmod(btm, p)) % p
+
+        x3 = (m**2 - x1 - x2) % p
+        y3 = (m*(x1 - x3) - y1) % p
+        return x3, y3
+
+    def mul(self, pt, k):
+        result = self.zero
+        add = self.add
+        while k:
+            if k & 1:
+                result = add(result, pt)
+            pt = add(pt, pt)
+            k >>= 1
+        return result
+
+
 class NoQuadraticResidueError(Exception):  pass
 
 
