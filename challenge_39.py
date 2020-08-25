@@ -16,8 +16,7 @@ def egcd(a: int, b: int) -> Tuple[int, int, int]:
 
     g, y, x = b, 0, 1
 
-    while stack:
-        a, b = stack.pop()
+    for a, b in stack[::-1]:
         g, y, x = g, x - (b//a)*y, y
 
     return g, y, x
