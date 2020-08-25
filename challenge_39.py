@@ -8,18 +8,25 @@ from challenge_34 import trunc
 class InvModException(Exception): pass
 
 
+#def egcd(a: int, b: int) -> Tuple[int, int, int]:
+#    stack = []
+#    while a != 0:
+#        stack.append((a, b))
+#        a, b = b % a, a
+#
+#    g, y, x = b, 0, 1
+#
+#    for a, b in stack[::-1]:
+#        g, y, x = g, x - (b//a)*y, y
+#
+#    return g, y, x
+
+
 def egcd(a: int, b: int) -> Tuple[int, int, int]:
-    stack = []
-    while a != 0:
-        stack.append((a, b))
-        a, b = b % a, a
-
-    g, y, x = b, 0, 1
-
-    for a, b in stack[::-1]:
-        g, y, x = g, x - (b//a)*y, y
-
-    return g, y, x
+    if a == 0:
+        return b, 0, 1
+    g, y, x = egcd(b % a, a)
+    return g, x-(b//a)*y, y
 
 
 def invmod(a: int, m: int) -> int:
