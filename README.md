@@ -79,5 +79,11 @@ implementation (challenge 30). This is only ever done when I think it improves
 readability. I understand that some might still find it disturbing. To them I
 say: lighten up. The code still reads just fine.
 
+The challenges in set 8 take a more conversational style than the earlier sets,
+and many involve "intermediate" steps; to match this, I've written those
+problems' solutions as Jupyter Notebooks (extension `.ipynb`). GitHub should
+render their contents automatically. Since `mypy` doesn't support Jupyter
+Notebooks, I've opted to omit type annotations in these solutions.
+
 I think that just about covers it. Thanks for reading, and if you like what you
 see here, feel free to get in touch!
