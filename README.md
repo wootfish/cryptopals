@@ -46,10 +46,10 @@ something like this:
 for fname in *.py; do echo "========== running $fname =========="; python3 $fname; done
 ```
 
-This will allow you to loop through all the challenges in order. Individual
-challenges can be skipped at will with Ctrl-C, which is useful for the few
-scripts that run forever (52, 55) as well as for those that just take a very
-long time to run (e.g. 31, 32, 56).
+This will loop through all the challenges in order. Individual challenges can
+be skipped at will with Ctrl-C, which is useful for the few scripts that run
+forever (52, 55) as well as for those that just take a very long time to run
+(e.g. 31, 32, 56).
 
 
 # Reading
