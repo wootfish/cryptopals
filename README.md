@@ -8,8 +8,9 @@ You can find the first seven sets of challenges [here](https://cryptopals.com).
 The eighth set is available [here](https://toadstyle.org/cryptopals/).
 
 If you're working through these challenges yourself, try to resist spending too
-much time looking at other people's work - you learn more from these when you
-figure them out on your own!
+much time looking at other people's work! Nine times out of ten you'll learn
+more from figuring things out on your own! It's not always easy, but that's
+kind of the point.
 
 If you're interested in this stuff, feel free to hit me up
 [on Twitter](https://twitter.com/elisohl) or
@@ -22,7 +23,7 @@ Some of these scripts require Python 3.6+, usually because I like to use f-strin
 
 There are a few library dependencies as well:
 
-* `pycrypto` to get native-C implementations of some primitives (mostly AES). Whenever a crypto algorithm's internals are the focus of a challenge, I use custom-written, native Python implementations; the rest of the time, I prefer to use these versions because they run much faster.
+* `pycrypto` to get native-C implementations of some primitives (mostly AES). Whenever a crypto algorithm's internals are the focus of a challenge, I'll use a bespoke Python implementation; the rest of the time, I prefer to use C bindings because they run much faster.
 * `flask` for challenges 31 and 32, which involve timing attacks carried out over HTTP.
 * `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floats. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done.
 
