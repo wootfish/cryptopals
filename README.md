@@ -26,6 +26,7 @@ There are a few library dependencies as well:
 * `pycrypto` to get native-C implementations of some primitives (mostly AES). Whenever a crypto algorithm's internals are the focus of a challenge, I'll use a bespoke Python implementation; the rest of the time, I prefer to use C bindings because they run much faster.
 * `flask` for challenges 31 and 32, which involve timing attacks carried out over HTTP.
 * `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floats. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done.
+* `notebook` for the Set 8 challenges, the solutions for which are presented as Jupyter notebooks.
 
 
 # Running
@@ -46,10 +47,14 @@ something like this:
 for fname in *.py; do echo "========== running $fname =========="; python3 $fname; done
 ```
 
-This will loop through all the challenges in order. Individual challenges can
-be skipped at will with Ctrl-C, which is useful for the few scripts that run
-forever (52, 55) as well as for those that just take a very long time to run
-(e.g. 31, 32, 56).
+This will loop through all the challenges in sets 1-7 in order. Individual
+challenges can be skipped at will with Ctrl-C, which is useful for the few
+scripts that run forever (52, 55) as well as for those that just take a very
+long time to run (e.g. 31, 32, 56).
+
+The Set 8 challenges are written as Jupyter notebooks. Run `jupyter notebook`
+in the repo's root directory, then view and run each challenge through the
+provided web UI.
 
 
 # Reading
