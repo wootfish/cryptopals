@@ -33,10 +33,10 @@ There are a few library dependencies as well:
 Almost all of these scripts are stand-alone and noninteractive, i.e. you can
 just start them with `python3 challenge_xx.py` and watch them run.
 
-The only two exceptions are challenges 31 and 32, which require a standalone web
+The only exceptions are challenges 31 and 32, which require a standalone web
 server to connect to. On startup they will prompt you for a server URL. The
-correct server invocations are documented at the top of `challenge_31_server.py`
-and `challenge_32_server.py`.
+correct server invocations are documented at the top of
+`challenge_31_server.py` and `challenge_32_server.py`.
 
 The challenges' naming convention is such that lexographic ordering preserves
 challenge order. You can run them all in order from the command line with
