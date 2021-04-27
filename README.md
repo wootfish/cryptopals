@@ -26,7 +26,7 @@ There are a few library dependencies as well:
 * `pycrypto` to get native-C implementations of some primitives (mostly AES). Whenever a crypto algorithm's internals are the focus of a challenge, I'll use a bespoke Python implementation; the rest of the time, I prefer to use C bindings because they run much faster.
 * `flask` and `requests` for challenges 31 and 32, which involve timing attacks carried out over HTTP.
 * `sympy` for challenges 40 and 42, where I wanted to calculate bignum cube roots without using floats. You could argue that pulling in a library for this is overkill, and you'd probably be right, but it gets the job done.
-* `notebook` for the Set 8 challenges, the solutions for which are presented as Jupyter notebooks.
+* `notebook` and `from-notebook` for the Set 8 challenges, the solutions for which are presented as Jupyter Notebooks.
 
 
 # Running

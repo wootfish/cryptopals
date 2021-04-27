@@ -3,3 +3,4 @@ notebook
 pycrypto
 requests
 sympy
+from-notebook
