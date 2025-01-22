@@ -1,6 +1,6 @@
 flask
 notebook
-pycrypto
+pycryptodome
 requests
 sympy
 from-notebook
